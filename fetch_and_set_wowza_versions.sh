@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Function to fetch and select Wowza Engine version
-fetch_wowza_versions() {
+fetch_and_set_wowza_versions() {
   # Fetch all available versions of Wowza Engine from Docker
   all_versions=""
   url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
