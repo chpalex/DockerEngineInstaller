@@ -15,8 +15,8 @@ create_and_run_docker_compose() {
   fi
 
   # Define volume directories
-  logs_dir="$build_dir/${container_name}_Engine_logs"
-  content_dir="$build_dir/${container_name}_Engine_content"
+  logs_dir="$build_dir/${container_name}/Engine_logs"
+  content_dir="$build_dir/${container_name}/Engine_content"
 
   # Create volume directories
   mkdir -p "$logs_dir"

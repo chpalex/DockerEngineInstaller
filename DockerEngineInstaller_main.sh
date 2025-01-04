@@ -125,6 +125,10 @@ if [ -f "$BASE_DIR/log4j2-config.xml" ]; then
   sudo rm "$BASE_DIR/log4j2-config.xml"
 fi
 
+# Move the COMPOSE_DIR to the container_name directory
+container_dir="$BUILD_DIR/${container_name}"
+mv "$COMPOSE_DIR"/* "$container_dir/"
+
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
 
@@ -133,12 +137,12 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo "To stop and destroy the Docker Wowza container, type: 
-sudo docker compose -f $COMPOSE_DIR/docker-compose.yml down
+sudo docker compose -f $container_dir/docker-compose.yml down
 
 To stop the container without destroying it, type:
-sudo docker compose -f $COMPOSE_DIR/docker-compose.yml stop
+sudo docker compose -f $container_dir/docker-compose.yml stop
 To start the container after stopping it, type:
-sudo docker compose -f $COMPOSE_DIR/docker-compose.yml start
+sudo docker compose -f $container_dir/docker-compose.yml start
 
 To access the container directly, type:
 sudo docker exec -it ${container_name} bash

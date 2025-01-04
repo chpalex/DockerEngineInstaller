@@ -5,7 +5,7 @@ engine_file_fetch() {
   local engine_version=$1
   local base_dir=$2
 
-  echo "   -----Preparing Wowza Engine files for modification-----"
+  echo "Preparing Wowza Engine files for modification"
 
   # Create a temporary container from the image
   sudo docker run -d --name temp_container --entrypoint /sbin/entrypoint.sh wowzamedia/wowza-streaming-engine-linux:${engine_version} > /dev/null
