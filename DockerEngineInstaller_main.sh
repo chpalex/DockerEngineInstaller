@@ -16,7 +16,7 @@ COMPOSE_DIR="$BUILD_DIR/EngineCompose"
 mkdir -p "$COMPOSE_DIR"
 
 # URL of the Functions Scripts
-DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/fetch_and_set_wowza_versions.sh"
+DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/install_dependencies.sh"
 FETCH_VERSIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/fetch_and_set_wowza_versions.sh"
 JKS_FUNCTIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/jks_functions.sh"
 TUNING_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/tuning.sh"
