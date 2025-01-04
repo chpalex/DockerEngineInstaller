@@ -2,8 +2,8 @@
 
 # Function to scan for .jks file
 check_for_jks() {
-  echo "Starting SSL Configuration"
-  echo "Searching for existing SSL Java Key Store (JKS) files..."
+  echo "   -----Starting SSL Configuration-----"
+  echo "   -----Searching for existing SSL Java Key Store (JKS) files-----"
   echo "Files found in $BASE_DIR:"
   ls -1 "$BASE_DIR"
 
