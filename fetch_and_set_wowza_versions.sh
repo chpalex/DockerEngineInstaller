@@ -5,7 +5,7 @@ fetch_and_set_wowza_versions() {
   # Fetch all available versions of Wowza Engine from Docker
   all_versions=""
   url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
-  while [ -n "$url" ]; do
+  while [ "$url" != "null" ]; do
     response=$(curl -s "$url")
     tags=$(echo "$response" | jq -r '.results[] | "\(.name) \(.last_updated)"')
     all_versions="$all_versions"$'\n'"$tags"
@@ -23,14 +23,14 @@ fetch_and_set_wowza_versions() {
 
   # Calculate the height of the menu based on the number of versions
   menu_height=$((${#version_list[@]} / 2 + 10))
-  [ $menu_height -gt 40 ] && menu_height=40  # Limit the height to 40
+  [ $menu_height -gt 20 ] && menu_height=20  # Limit the height to 20
 
-  # Calculate the width of the menu based on the length of the longest version string
-  menu_width=$(echo "$sorted_versions" | awk '{ if (length > max) max = length } END { print max + 10 }')
-  [ $menu_width -gt 78 ] && menu_width=78  # Limit the width to 78
+  # Calculate the list height
+  list_height=$((${#version_list[@]} / 2))
+  [ $list_height -gt 10 ] && list_height=10  # Limit the list height to 10
 
   # Use whiptail to create a menu for selecting the version
-  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 78 ${#version_list[@]} "${version_list[@]}" 3>&1 1>&2 2>&3)
+  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 80 $list_height "${version_list[@]}" 3>&1 1>&2 2>&3)
 
   # Check if the user selected a version
   if [ $? -eq 0 ]; then
