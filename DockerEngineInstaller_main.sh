@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Debug
+# set -e
+# set -x
+
 # Get the directory of the script
 SCRIPT_DIR=$(realpath $(dirname "$0"))
 
@@ -20,18 +24,24 @@ DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/Docker
 FETCH_VERSIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/fetch_and_set_wowza_versions.sh"
 JKS_FUNCTIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/jks_functions.sh"
 TUNING_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/tuning.sh"
+CREATE_DOCKER_IMAGE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_docker_image.sh"
+PROMPT_CREDENTIALS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/prompt_credentials.sh"
 
 # Download the Functions Scripts
 curl -o "$SCRIPT_DIR/install_dependencies.sh" "$DEPENDENCIES_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/fetch_and_set_wowza_versions.sh" "$FETCH_VERSIONS_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/jks_functions.sh" "$JKS_FUNCTIONS_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/tuning.sh" "$TUNING_SCRIPT_URL" > /dev/null 2>&1
- 
+curl -o "$SCRIPT_DIR/create_docker_image.sh" "$CREATE_DOCKER_IMAGE_SCRIPT_URL" > /dev/null 2>&1
+curl -o "$SCRIPT_DIR/prompt_credentials.sh" "$PROMPT_CREDENTIALS_SCRIPT_URL" > /dev/null 2>&1
+
 # Source for the Functions Scripts
 source "$SCRIPT_DIR/install_dependencies.sh"
 source "$SCRIPT_DIR/fetch_and_set_wowza_versions.sh"
 source "$SCRIPT_DIR/jks_functions.sh"
 source "$SCRIPT_DIR/tuning.sh"
+source "$SCRIPT_DIR/create_docker_image.sh"
+source "$SCRIPT_DIR/prompt_credentials.sh"
 
 # Check if Docker is installed
 echo "   -----Checking if Docker is installed-----"
@@ -51,6 +61,7 @@ engine_version=$(fetch_and_set_wowza_versions)
 
 ## Create the Server.xml and VHost.xml files
 echo "   -----Creating Server.xml and VHost.xml for SSL file-----"
+
 # Create a temporary container from the image
 sudo docker run -d --name temp_container --entrypoint /sbin/entrypoint.sh wowzamedia/wowza-streaming-engine-linux:${engine_version} > /dev/null
 
@@ -64,61 +75,17 @@ sudo docker rm -f temp_container > /dev/null
 # Handle JKS file detection and setup
 check_for_jks
 
-tuning "$BUILD_DIR"
+# Tune the Wowza Streaming Engine configuration
+tuning
 
-# Change directory to $BUILD_DIR/
-cd "$BUILD_DIR"
-
-# Create a Dockerfile
-cat <<EOL > Dockerfile
-FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
-
-RUN apt update
-RUN apt install nano
-
-WORKDIR /usr/local/WowzaStreamingEngine/
-EOL
-
-# Append COPY commands if the files exist
-if [ -n "$jks_file" ] && [ -f "$BASE_DIR/$jks_file" ]; then
-  echo "COPY base_files/${jks_file} /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
-  echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/${jks_file}" >> Dockerfile
-fi
-
-if [ -f "$BASE_DIR/tomcat.properties" ]; then
-  echo "COPY base_files/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
-  echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
-fi
-
-if [ -f "$BASE_DIR/Server.xml" ]; then
-  echo "COPY base_files/Server.xml /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
-  echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
-fi
-
-if [ -f "$BASE_DIR/VHost.xml" ]; then
-  echo "COPY base_files/VHost.xml /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
-  echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
-fi
-
-# Build the Docker image from specified version
-sudo docker build . -t wowza_engine:$engine_version
+# Create a Dockerfile and build the Docker image
+create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 
 # Change directory to $COMPOSE_DIR
 cd "$COMPOSE_DIR"
 
-# Prompt user for Wowza Streaming Engine Manager credentials and license key
-read -p "Provide Wowza username: " WSE_MGR_USER
-read -s -p "Provide Wowza password: " WSE_MGR_PASS
-echo
-read -p "Provide Wowza license key: " WSE_LIC
-echo
-
-# Create .env file
-cat <<EOL > .env
-WSE_MGR_USER=${WSE_MGR_USER}
-WSE_MGR_PASS=${WSE_MGR_PASS}
-WSE_LIC=${WSE_LIC}
-EOL
+# Prompt for credentials and license key
+prompt_credentials
 
 # Create docker-compose.yml
 cat <<EOL > docker-compose.yml
@@ -159,7 +126,6 @@ sudo docker compose logs
 # Clean up the install directory
 echo "Cleaning up the install directory..."
 
-# Clean up the install directory
 if [ -f "$BASE_DIR/VHost.xml" ]; then
   sudo rm "$BASE_DIR/VHost.xml"
 fi
