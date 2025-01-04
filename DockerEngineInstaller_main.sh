@@ -3,6 +3,17 @@
 # Debug
 # set -e
 # set -x
+# Display info box about the script and function scripts
+whiptail --title "Docker Engine Installer" --msgbox "This script will:
+- Check and install Docker if not present
+- Fetch and set Wowza Engine versions
+- Handle SSL configuration
+- Tune Wowza Streaming Engine configuration
+- Create Docker image for Wowza Engine
+- Prompt for credentials and license key
+- Create and run Docker Compose
+- Clean up installation files
+- Provide instructions to connect to Wowza Streaming Engine Manager" 20 78
 
 # Get the directory of the script
 SCRIPT_DIR=$(realpath $(dirname "$0"))
@@ -50,11 +61,11 @@ source "$SCRIPT_DIR/create_and_run_docker_compose.sh"
 source "$SCRIPT_DIR/engine_file_fetch.sh"
 
 # Check if Docker is installed
-echo "   -----Checking if Docker is installed-----"
+echo "Checking if Docker is installed"
 if ! command -v docker &> /dev/null; then
   install_docker
 else
-  echo "   -----Docker found-----"
+  echo "Docker found"
 fi
 
 # Check if jq is installed
@@ -64,6 +75,10 @@ fi
 
 # Fetch and set Wowza Engine version
 engine_version=$(fetch_and_set_wowza_versions)
+if [ $? -ne 0 ]; then
+  echo "Installation cancelled by user."
+  exit 1
+fi
 
 # Copy Engine files from the Wowza Engine Docker image
 engine_file_fetch "$engine_version" "$BASE_DIR"
@@ -84,6 +99,7 @@ cd "$COMPOSE_DIR"
 check_env_prompt_credentials
 
 # Create and run docker compose
+
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS"
 
 # Clean up the install directory
@@ -105,15 +121,27 @@ if [ -f "$BASE_DIR/tomcat.properties" ]; then
   sudo rm "$BASE_DIR/tomcat.properties"
 fi
 
+if [ -f "$BASE_DIR/log4j2-config.xml" ]; then
+  sudo rm "$BASE_DIR/log4j2-config.xml"
+fi
+
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
 
 # Get the private IP address
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
-# Print instructions to stop WSE and connect to Wowza Streaming Engine Manager
+# Print instructions on how to use the Wowza Streaming Engine Docker container
 echo "To stop and destroy the Docker Wowza container, type: 
 sudo docker compose -f $COMPOSE_DIR/docker-compose.yml down
+
+To stop the container without destroying it, type:
+sudo docker compose -f $COMPOSE_DIR/docker-compose.yml stop
+To start the container after stopping it, type:
+sudo docker compose -f $COMPOSE_DIR/docker-compose.yml start
+
+To access the container directly, type:
+sudo docker exec -it ${container_name} bash
 "
 echo "
 Check $BUILD_DIR for Engine Logs and contents directories

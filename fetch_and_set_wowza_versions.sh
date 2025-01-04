@@ -36,7 +36,6 @@ fetch_and_set_wowza_versions() {
   if [ $? -eq 0 ]; then
     echo "$engine_version"
   else
-    echo "No version selected, exiting install process" >&2
-    exit 1
+    return 1
   fi
 }

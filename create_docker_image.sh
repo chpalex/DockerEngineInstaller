@@ -41,6 +41,11 @@ EOL
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
   fi
 
+  if [ -f "$base_dir/log4j2-config.xml" ]; then
+    echo "COPY base_files/log4j2-config.xml /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
+    echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/log4j2-config.xml" >> Dockerfile
+  fi
+  
   # Build the Docker image from specified version
   sudo docker build . -t wowza_engine:$engine_version
 }

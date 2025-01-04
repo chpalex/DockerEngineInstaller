@@ -2,8 +2,8 @@
 
 # Function to scan for .jks file
 check_for_jks() {
-  echo "   -----Starting SSL Configuration-----"
-  echo "   -----Searching for existing SSL Java Key Store (JKS) files-----"
+  echo "Starting SSL Configuration"
+  echo "Searching for existing SSL Java Key Store (JKS) files"
   echo "Files found in $BASE_DIR:"
   ls -1 "$BASE_DIR"
 
@@ -38,7 +38,7 @@ ssl_config() {
 
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
-  echo "   -----Creating tomcat.properties file-----"
+  echo "Setting up SSL for streaming and Manager access"
   cat <<EOL > "$BASE_DIR/tomcat.properties"
 httpsPort=8090
 httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}

@@ -10,11 +10,10 @@ engine_file_fetch() {
   # Create a temporary container from the image
   sudo docker run -d --name temp_container --entrypoint /sbin/entrypoint.sh wowzamedia/wowza-streaming-engine-linux:${engine_version} > /dev/null
 
-  # Copy some Engine files to host for further editing
+  # Copy the VHost.xml file from the container to the host
   sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/VHost.xml "$base_dir/VHost.xml" > /dev/null 2>&1
   sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/Server.xml "$base_dir/Server.xml" > /dev/null 2>&1
-  sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/log4j2-config.xml "$base_dir/log4j2-config.xml" > /dev/null 2>&1
-  
+
   # Remove the temporary container
   sudo docker rm -f temp_container > /dev/null
 }

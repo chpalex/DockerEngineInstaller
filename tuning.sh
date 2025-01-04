@@ -1,9 +1,8 @@
-
 #!/bin/bash
 
 tuning () {
 # Server Tuning #
-echo "   -----Tuning Network Sockets and Server Threads-----"
+echo "Tuning Network Sockets and Server Threads"
 # Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>
 sed -i 's|<ReceiveBufferSize>.*</ReceiveBufferSize>|<ReceiveBufferSize>0</ReceiveBufferSize>|g' "$BASE_DIR/VHost.xml"
 sed -i 's|<SendBufferSize>.*</SendBufferSize>|<SendBufferSize>0</SendBufferSize>|g' "$BASE_DIR/VHost.xml"
@@ -31,7 +30,7 @@ sed -i 's|<TransportThreadPool>.*</TransportThreadPool>|<TransportThreadPool><Po
 # Configure Demo live stream
 read -p "Do you want to add a demo live stream on Engine? (y/n): " demo_stream
 if [ "$demo_stream" = "y" ]; then
-  echo "   -----Adding demo live stream myStream to the Engine-----"
+  echo "Adding demo live stream myStream to the Engine"
   # Create a demo live stream
   sed -i '/<\/ServerListeners>/i \
             <ServerListener>\
