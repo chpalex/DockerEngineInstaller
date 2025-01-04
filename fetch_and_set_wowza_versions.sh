@@ -25,7 +25,7 @@ fetch_and_set_wowza_versions() {
     read -p "Enter the version of the engine you want to build from the list above: " engine_version
     if echo "$sorted_versions" | grep -q "^${engine_version}$"; then
       echo "$engine_version"
-      break
+      return 0
     else
       echo "Error: The specified version ${engine_version} does not exist. Please enter a valid version from the list below:"
       echo "$sorted_versions"
