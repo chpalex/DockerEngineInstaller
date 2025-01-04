@@ -26,6 +26,7 @@ JKS_FUNCTIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/Docke
 TUNING_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/tuning.sh"
 CREATE_DOCKER_IMAGE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_docker_image.sh"
 PROMPT_CREDENTIALS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/prompt_credentials.sh"
+CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_and_run_docker_compose.sh"
 
 # Download the Functions Scripts
 curl -o "$SCRIPT_DIR/install_dependencies.sh" "$DEPENDENCIES_SCRIPT_URL" > /dev/null 2>&1
@@ -34,6 +35,7 @@ curl -o "$SCRIPT_DIR/jks_functions.sh" "$JKS_FUNCTIONS_SCRIPT_URL" > /dev/null 2
 curl -o "$SCRIPT_DIR/tuning.sh" "$TUNING_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/create_docker_image.sh" "$CREATE_DOCKER_IMAGE_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/prompt_credentials.sh" "$PROMPT_CREDENTIALS_SCRIPT_URL" > /dev/null 2>&1
+curl -o "$SCRIPT_DIR/create_and_run_docker_compose.sh" "$CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL" > /dev/null 2>&1
 
 # Source for the Functions Scripts
 source "$SCRIPT_DIR/install_dependencies.sh"
@@ -42,6 +44,7 @@ source "$SCRIPT_DIR/jks_functions.sh"
 source "$SCRIPT_DIR/tuning.sh"
 source "$SCRIPT_DIR/create_docker_image.sh"
 source "$SCRIPT_DIR/prompt_credentials.sh"
+source "$SCRIPT_DIR/create_and_run_docker_compose.sh"
 
 # Check if Docker is installed
 echo "   -----Checking if Docker is installed-----"
@@ -85,43 +88,10 @@ create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 cd "$COMPOSE_DIR"
 
 # Prompt for credentials and license key
-prompt_credentials
+check_env_prompt_credentials
 
-# Create docker-compose.yml
-cat <<EOL > docker-compose.yml
-services:
-  wowza:
-    image: docker.io/library/wowza_engine:${engine_version}
-    container_name: wse_${engine_version}
-    restart: always
-    ports:
-      - "6970-7000:6970-7000/udp"
-      - "443:443"
-      - "1935:1935"
-      - "554:554"
-      - "8084-8090:8084-8090/tcp"
-    volumes:
-      - $BUILD_DIR/DockerWSELogs:/usr/local/WowzaStreamingEngine/logs
-      - $BUILD_DIR/DockerWSEcontent:/usr/local/WowzaStreamingEngine/content
-    entrypoint: /sbin/entrypoint.sh
-    env_file: 
-      - ./.env
-    environment:
-      - WSE_LIC=${WSE_LIC}
-      - WSE_MGR_USER=${WSE_MGR_USER}
-      - WSE_MGR_PASS=${WSE_MGR_PASS}
-EOL
-
-# Run docker compose up
-echo "Running docker compose up..."
-sudo docker compose up -d
-
-# Wait for the services to start and print logs
-echo "Waiting for services to start..."
-sleep 3  # Adjust the sleep time as needed
-
-echo "Printing docker compose logs..."
-sudo docker compose logs
+# Create and run docker compose
+create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS"
 
 # Clean up the install directory
 echo "Cleaning up the install directory..."
