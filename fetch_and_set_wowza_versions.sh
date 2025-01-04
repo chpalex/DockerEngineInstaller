@@ -23,13 +23,17 @@ fetch_and_set_wowza_versions() {
   # Prompt user for version of the engine and verify if it exists
   while true; do
     read -p "Enter the version of the engine you want to build from the list above: " engine_version
+    echo "User entered: $engine_version"
+    echo "Checking if $engine_version exists in the sorted versions list..."
     if echo "$sorted_versions" | grep -q "^${engine_version}$"; then
-      echo "$engine_version"
+      echo "Selected version: $engine_version"
       break
     else
       echo "Error: The specified version ${engine_version} does not exist. Please enter a valid version from the list below:"
       echo "$sorted_versions"
     fi
   done
-  echo $engine_version "is the version of Wowza Streaming Engine"
+
+  # Return the selected version
+  echo "$engine_version"
 }
