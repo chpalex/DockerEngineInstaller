@@ -25,6 +25,10 @@ fetch_and_set_wowza_versions() {
   menu_height=$((${#version_list[@]} / 2 + 10))
   [ $menu_height -gt 40 ] && menu_height=40  # Limit the height to 40
 
+  # Calculate the width of the menu based on the length of the longest version string
+  menu_width=$(echo "$sorted_versions" | awk '{ if (length > max) max = length } END { print max + 10 }')
+  [ $menu_width -gt 78 ] && menu_width=78  # Limit the width to 78
+
   # Use whiptail to create a menu for selecting the version
   engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 78 ${#version_list[@]} "${version_list[@]}" 3>&1 1>&2 2>&3)
 
