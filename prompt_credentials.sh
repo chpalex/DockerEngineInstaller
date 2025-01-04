@@ -31,7 +31,6 @@ prompt_credentials() {
       exit 1
     fi
   fi
-}
 
 # Check if .env file exists
 if [ -f ".env" ]; then
@@ -50,3 +49,5 @@ WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
 EOL
+
+}
