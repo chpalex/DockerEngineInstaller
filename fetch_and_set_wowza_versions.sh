@@ -31,5 +31,5 @@ fetch_and_set_wowza_versions() {
       echo "$sorted_versions"
     fi
   done
-  echo "$engine_version"
+  echo $engine_version "is the version of Wowza Streaming Engine"
 }
