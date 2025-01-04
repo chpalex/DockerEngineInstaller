@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 tuning () {
@@ -45,4 +46,7 @@ if [ "$demo_stream" = "y" ]; then
     sed -i "${line_number}i <Property>\n<Name>streamDemoPublisherConfig</Name>\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\n<Type>String</Type>\n</Property>" "$BASE_DIR/Server.xml"
   fi
 fi
+  # Edit log4j2-config.xml to comment out serverError appender
+  sed -i 's|<AppenderRef ref="serverError" level="warn"/>|<!-- <AppenderRef ref="serverError" level="warn"/> -->|g' "$BASE_DIR/log4j2-config.xml"
+
 }
