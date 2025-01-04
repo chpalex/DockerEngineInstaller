@@ -112,8 +112,8 @@ public_ip=$(curl -s ifconfig.me)
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions to stop WSE and connect to Wowza Streaming Engine Manager
-echo "
-To stop WSE, type: sudo docker compose -f $COMPOSE_DIR/docker-compose.yml down
+echo "To stop and destroy the Docker Wowza container, type: 
+sudo docker compose -f $COMPOSE_DIR/docker-compose.yml down
 "
 echo "
 Check $BUILD_DIR for Engine Logs and contents directories
