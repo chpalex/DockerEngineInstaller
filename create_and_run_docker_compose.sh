@@ -24,7 +24,6 @@ services:
     volumes:
       - $build_dir/DockerEngine_Logs:/usr/local/WowzaStreamingEngine/logs
       - $build_dir/DockerEngine_content:/usr/local/WowzaStreamingEngine/content
-      - $build_dir/DockerEngine_conf:/usr/local/WowzaStreamingEngine/conf
 
     entrypoint: /sbin/entrypoint.sh
     env_file: 
