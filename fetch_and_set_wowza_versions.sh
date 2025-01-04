@@ -14,8 +14,12 @@ fetch_and_set_wowza_versions() {
     version_list+=("$version" "")
   done <<< "$sorted_versions"
 
+  # Calculate the height of the menu based on the number of versions
+  menu_height=$((${#version_list[@]} / 2 + 10))
+  [ $menu_height -gt 40 ] && menu_height=40  # Limit the height to 40
+
   # Use whiptail to create a menu for selecting the version
-  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Choose a version:" 20 78 10 "${version_list[@]}" 3>&1 1>&2 2>&3)
+  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Choose a version:" $menu_height 78 ${#version_list[@]} "${version_list[@]}" 3>&1 1>&2 2>&3)
 
   # Check if the user selected a version
   if [ $? -eq 0 ]; then
