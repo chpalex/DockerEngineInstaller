@@ -1,5 +1,6 @@
 #!/bin/bash
 
+tuning () {
 # Server Tuning #
 echo "   -----Tuning Network Sockets and Server Threads-----"
 # Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>
@@ -44,3 +45,4 @@ if [ "$demo_stream" = "y" ]; then
     sed -i "${line_number}i <Property>\n<Name>streamDemoPublisherConfig</Name>\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\n<Type>String</Type>\n</Property>" "$BASE_DIR/Server.xml"
   fi
 fi
+}
