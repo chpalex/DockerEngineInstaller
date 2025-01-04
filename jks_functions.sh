@@ -134,7 +134,7 @@ upload_jks() {
           read -p "No .jks file found. Would you like to upload again? (y/n): " upload_again
           case $upload_again in
             [Yy]* )
-              read -p "Press [Enter] to continue after uploading the files..."
+             #removeTest# read -p "Press [Enter] to continue after uploading the files..."
               ;;
             [Nn]* )
               echo "You chose not to add a .jks file. Moving on to tuning."
