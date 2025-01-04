@@ -31,7 +31,9 @@ prompt_credentials() {
       exit 1
     fi
   fi
+}
 
+check_env_prompt_credentials() {
 # Check if .env file exists
 if [ -f ".env" ]; then
   # Read existing values from .env file
