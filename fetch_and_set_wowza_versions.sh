@@ -8,19 +8,20 @@ fetch_and_set_wowza_versions() {
   # Sort versions by date released and remove the date field
   sorted_versions=$(echo "$all_versions" | sort -k2 -r | awk '{print $1}')
 
-  # Display the sorted versions
-  echo "All available versions sorted by date released:"
-  echo "$sorted_versions"
+  # Convert sorted versions to a format suitable for whiptail
+  version_list=()
+  while IFS= read -r version; do
+    version_list+=("$version" "")
+  done <<< "$sorted_versions"
 
-  # Prompt user for version of the engine and verify if it exists
-  while true; do
-    read -p "Enter the version of the engine you want to build from the list above: " engine_version
-    if echo "$sorted_versions" | grep -q "^${engine_version}$"; then
-      echo "$engine_version"
-      return
-    else
-      echo "Error: The specified version ${engine_version} does not exist. Please enter a valid version from the list below:"
-      echo "$sorted_versions"
-    fi
-  done
+  # Use whiptail to create a menu for selecting the version
+  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Choose a version:" 20 78 10 "${version_list[@]}" 3>&1 1>&2 2>&3)
+
+  # Check if the user selected a version
+  if [ $? -eq 0 ]; then
+    echo "$engine_version"
+  else
+    echo "No version selected, exiting install process" >&2
+    exit 1
+  fi
 }
