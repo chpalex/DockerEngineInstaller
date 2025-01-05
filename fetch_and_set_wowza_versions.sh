@@ -43,4 +43,7 @@ fetch_and_set_wowza_versions() {
   if [ $? -ne 0 ] || [ -z "$container_name" ]; then
     container_name="wse_${engine_version}"
   fi
+
+  # Export the container_name variable to make it available to other scripts
+  export container_name
 }
