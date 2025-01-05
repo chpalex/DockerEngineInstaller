@@ -35,36 +35,45 @@ cleanup() {
   mv "$compose_dir"/* "$container_dir/"
   mv "$build_dir/.env" "$container_dir/"
   mv "$build_dir/docker-compose.yml" "$container_dir/"
-  rm "$COMPOSE_DIR" -r
+  rm -r "$compose_dir"
 
-  # Prompt user to select Docker images and containers to delete
+  # Prompt user to select Docker images to delete
   local images=$(docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}")
-  local containers=$(docker ps -a --format "{{.Names}} {{.ID}}")
-
-  # Combine images and containers into a single list for whiptail
-  local options=()
+  local image_options=()
   while IFS= read -r line; do
-    options+=("$line" "")
+    image_options+=("$line" "")
   done <<< "$images"
-  while IFS= read -r line; do
-    options+=("$line" "")
-  done <<< "$containers"
 
-  # Display whiptail checkbox dialog
-  local selected=$(whiptail --title "Select Docker Images and Containers to Delete" --checklist "Choose items to delete:" 20 78 10 "${options[@]}" 3>&1 1>&2 2>&3)
+  local selected_images=$(whiptail --title "Select Docker Images to Delete" --checklist "Choose images to delete:" 20 78 10 "${image_options[@]}" 3>&1 1>&2 2>&3)
 
-  # Check if user selected any items
+  # Check if user selected any images
   if [ $? -eq 0 ]; then
-    IFS=" " read -r -a selected_items <<< "$selected"
-    for item in "${selected_items[@]}"; do
+    IFS=" " read -r -a selected_image_items <<< "$selected_images"
+    for item in "${selected_image_items[@]}"; do
       # Remove quotes from item
       item=$(echo "$item" | tr -d '"')
-      # Check if item is an image or container and delete accordingly
-      if docker images --format "{{.ID}}" | grep -q "$item"; then
-        docker rmi "$item"
-      elif docker ps -a --format "{{.ID}}" | grep -q "$item"; then
-        docker rm "$item"
-      fi
+      # Delete the selected image
+      docker rmi "$item"
+    done
+  fi
+
+  # Prompt user to select Docker containers to delete
+  local containers=$(docker ps -a --format "{{.Names}} {{.ID}}")
+  local container_options=()
+  while IFS= read -r line; do
+    container_options+=("$line" "")
+  done <<< "$containers"
+
+  local selected_containers=$(whiptail --title "Select Docker Containers to Delete" --checklist "Choose containers to delete:" 20 78 10 "${container_options[@]}" 3>&1 1>&2 2>&3)
+
+  # Check if user selected any containers
+  if [ $? -eq 0 ]; then
+    IFS=" " read -r -a selected_container_items <<< "$selected_containers"
+    for item in "${selected_container_items[@]}"; do
+      # Remove quotes from item
+      item=$(echo "$item" | tr -d '"')
+      # Delete the selected container
+      docker rm "$item"
     done
   fi
 }
