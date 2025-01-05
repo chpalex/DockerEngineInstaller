@@ -46,7 +46,7 @@ else
 fi
 
 # Create .env file
-cat <<EOL > $container_dir/.env
+cat <<EOL > "$container_dir/.env"
 WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
