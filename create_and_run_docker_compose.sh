@@ -46,7 +46,7 @@ EOL
 
   # Run docker compose up
   echo "Running docker compose up..."
-  cd $container_dir
+  cd "$container_dir"
   sudo docker compose up -d
 
   # Wait for the services to start and print logs
@@ -56,6 +56,4 @@ EOL
   echo "Printing docker compose logs..."
   sudo docker compose logs
 
-  # Export the container_name variable to make it available to other scripts
-  export container_dir="$build_dir/${container_name}"
 }
