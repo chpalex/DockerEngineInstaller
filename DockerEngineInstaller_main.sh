@@ -27,20 +27,16 @@ mkdir -p "$BUILD_DIR"
 BASE_DIR="$BUILD_DIR/base_files"
 mkdir -p "$BASE_DIR"
 
-# Define the EngineCompose directory
-COMPOSE_DIR="$BUILD_DIR/EngineCompose"
-mkdir -p "$COMPOSE_DIR"
-
 # URL of the Functions Scripts
-DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/install_dependencies.sh"
-FETCH_VERSIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/fetch_and_set_wowza_versions.sh"
-JKS_FUNCTIONS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/jks_functions.sh"
-TUNING_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/tuning.sh"
-CREATE_DOCKER_IMAGE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_docker_image.sh"
-PROMPT_CREDENTIALS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/prompt_credentials.sh"
-CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_and_run_docker_compose.sh"
-ENGINE_FILE_FETCH_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/engine_file_fetch.sh"
-CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/cleanup.sh"
+DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/install_dependencies.sh"
+FETCH_VERSIONS_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/fetch_and_set_wowza_versions.sh"
+JKS_FUNCTIONS_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/jks_functions.sh"
+TUNING_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/tuning.sh"
+CREATE_DOCKER_IMAGE_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/create_docker_image.sh"
+PROMPT_CREDENTIALS_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/prompt_credentials.sh"
+CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/create_and_run_docker_compose.sh"
+ENGINE_FILE_FETCH_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/engine_file_fetch.sh"
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/cleanup.sh"
 
 # Download the Functions Scripts
 curl -o "$SCRIPT_DIR/install_dependencies.sh" "$DEPENDENCIES_SCRIPT_URL" > /dev/null 2>&1
@@ -90,8 +86,6 @@ if [ $? -ne 0 ] || [ -z "$container_name" ]; then
   container_name="wse_${engine_version}"
 fi
 
-echo "This is the container name: $container_name"
-
 # Copy Engine files from the Wowza Engine Docker image
 engine_file_fetch "$engine_version" "$BASE_DIR"
 
@@ -104,18 +98,17 @@ tuning
 # Create a Dockerfile and build the Docker image
 create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 
-# Change directory to $COMPOSE_DIR
-cd "$COMPOSE_DIR"
+container_dir="$BUILD_DIR/$container_name"
 
 # Prompt for credentials and license key
-check_env_prompt_credentials
+check_env_prompt_credentials "$container_dir"
 
 # Create and run docker compose
 
-create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name"
+create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 
 # Clean up the install directory and prompt user to delete Docker images and containers
-cleanup "$BASE_DIR" "$BUILD_DIR" "$COMPOSE_DIR" "$container_name"
+cleanup "$BASE_DIR" "$BUILD_DIR" "$container_name"
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
@@ -124,8 +117,9 @@ public_ip=$(curl -s ifconfig.me)
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
-echo "To stop and destroy the Docker Wowza container, type: 
-sudo docker compose -f $container_dir/docker-compose.yml down
+echo "To stop and destroy the Docker Wowza container, type:
+cd $container_dir
+sudo docker compose docker-compose.yml down
 
 To stop the container without destroying it, type:
 sudo docker $container_name stop
