@@ -19,7 +19,7 @@ create_and_run_docker_compose() {
   mkdir -p "$content_dir"
 
   # Create docker-compose.yml
-  cat <<EOL > $container_dir/docker-compose.yml
+  cat <<EOL > "$container_dir/docker-compose.yml"
 services:
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
