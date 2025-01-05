@@ -39,12 +39,6 @@ fetch_and_set_wowza_versions() {
     return 1
   fi
 
-  # Prompt for Docker container name
-  container_name=$(whiptail --inputbox "Enter Docker container name (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ] || [ -z "$container_name" ]; then
-    container_name="wse_${engine_version}"
-  fi
-
   # Export the container_name variable to make it available to other scripts
   export container_name
 }
