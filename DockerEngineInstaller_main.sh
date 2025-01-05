@@ -98,7 +98,9 @@ tuning
 # Create a Dockerfile and build the Docker image
 create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 
+# Define the Container directory
 container_dir="$BUILD_DIR/$container_name"
+mkdir -p "$container_dir"
 
 # Prompt for credentials and license key
 check_env_prompt_credentials "$container_dir"
