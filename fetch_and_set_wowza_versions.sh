@@ -38,7 +38,4 @@ fetch_and_set_wowza_versions() {
   else
     return 1
   fi
-
-  # Export the container_name variable to make it available to other scripts
-  export container_name
 }
