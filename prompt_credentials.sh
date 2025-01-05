@@ -2,6 +2,8 @@
 
 # Function to prompt for credentials and license key
 prompt_credentials() {
+  local container_dir=$1
+  
   WSE_MGR_USER=$(whiptail --inputbox "Provide Wowza username:" 8 78 "$1" --title "Wowza Credentials" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$WSE_MGR_USER" ]; then
     whiptail --msgbox "Username is required. Please try again." 8 78 --title "Error"
