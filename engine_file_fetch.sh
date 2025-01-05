@@ -13,7 +13,8 @@ engine_file_fetch() {
   # Copy the VHost.xml file from the container to the host
   sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/VHost.xml "$base_dir/VHost.xml" > /dev/null 2>&1
   sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/Server.xml "$base_dir/Server.xml" > /dev/null 2>&1
-
+  sudo docker cp temp_container:/usr/local/WowzaStreamingEngine/conf/log4j2-config.xml "$base_dir/log4j2-config.xml" > /dev/null 2>&1
+  
   # Remove the temporary container
   sudo docker rm -f temp_container > /dev/null
 }
