@@ -49,6 +49,3 @@ EOL
   # Build the Docker image from specified version
   sudo docker build . -t wowza_engine:$engine_version
 }
-
-# Example usage:
-# create_docker_image "/path/to/build_dir" "/path/to/base_dir" "4.8.5" "my_jks_file.jks"

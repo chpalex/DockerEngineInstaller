@@ -4,8 +4,6 @@
 cleanup() {
   local base_dir=$1
   local build_dir=$2
-  local compose_dir=$3
-  local container_name=$4
 
   echo "Cleaning up the install directory..."
 
@@ -28,10 +26,4 @@ cleanup() {
   if [ -f "$base_dir/log4j2-config.xml" ]; then
     sudo rm "$base_dir/log4j2-config.xml"
   fi
-
-  # Move the COMPOSE_DIR to the container_name directory
-  local container_dir="$build_dir/${container_name}"
-  mv "$compose_dir"/* "$container_dir/"
-  mv "$compose_dir/.env" "$container_dir/"
-  rm -r "$compose_dir"
 }

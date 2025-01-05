@@ -3,6 +3,7 @@
 # Debug
 # set -e
 # set -x
+
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
@@ -39,6 +40,7 @@ CREATE_DOCKER_IMAGE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy
 PROMPT_CREDENTIALS_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/prompt_credentials.sh"
 CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/create_and_run_docker_compose.sh"
 ENGINE_FILE_FETCH_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/engine_file_fetch.sh"
+CLEANUP_SCRIPT_URL="https://raw.githubusercontent.com/alex-chepurnoy/DockerEngineInstaller/refs/heads/main/cleanup.sh"
 
 # Download the Functions Scripts
 curl -o "$SCRIPT_DIR/install_dependencies.sh" "$DEPENDENCIES_SCRIPT_URL" > /dev/null 2>&1
@@ -49,6 +51,7 @@ curl -o "$SCRIPT_DIR/create_docker_image.sh" "$CREATE_DOCKER_IMAGE_SCRIPT_URL" >
 curl -o "$SCRIPT_DIR/prompt_credentials.sh" "$PROMPT_CREDENTIALS_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/create_and_run_docker_compose.sh" "$CREATE_AND_RUN_DOCKER_COMPOSE_SCRIPT_URL" > /dev/null 2>&1
 curl -o "$SCRIPT_DIR/engine_file_fetch.sh" "$ENGINE_FILE_FETCH_SCRIPT_URL" > /dev/null 2>&1
+curl -o "$SCRIPT_DIR/cleanup.sh" "$CLEANUP_SCRIPT_URL" > /dev/null 2>&1
 
 # Source for the Functions Scripts
 source "$SCRIPT_DIR/install_dependencies.sh"
@@ -59,6 +62,7 @@ source "$SCRIPT_DIR/create_docker_image.sh"
 source "$SCRIPT_DIR/prompt_credentials.sh"
 source "$SCRIPT_DIR/create_and_run_docker_compose.sh"
 source "$SCRIPT_DIR/engine_file_fetch.sh"
+source "$SCRIPT_DIR/cleanup.sh"
 
 # Check if Docker is installed
 echo "Checking if Docker is installed"
@@ -80,6 +84,14 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Prompt for Docker container name
+container_name=$(whiptail --inputbox "Enter Docker container name (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
+if [ $? -ne 0 ] || [ -z "$container_name" ]; then
+  container_name="wse_${engine_version}"
+fi
+
+echo "This is the container name: $container_name"
+
 # Copy Engine files from the Wowza Engine Docker image
 engine_file_fetch "$engine_version" "$BASE_DIR"
 
@@ -100,36 +112,10 @@ check_env_prompt_credentials
 
 # Create and run docker compose
 
-create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS"
+create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name"
 
-# Clean up the install directory
-echo "Cleaning up the install directory..."
-
-if [ -f "$BASE_DIR/VHost.xml" ]; then
-  sudo rm "$BASE_DIR/VHost.xml"
-fi
-
-if [ -f "$BASE_DIR/Server.xml" ]; then
-  sudo rm "$BASE_DIR/Server.xml"
-fi
-
-if [ -f "$BUILD_DIR/Dockerfile" ]; then
-  sudo rm "$BUILD_DIR/Dockerfile"
-fi
-
-if [ -f "$BASE_DIR/tomcat.properties" ]; then
-  sudo rm "$BASE_DIR/tomcat.properties"
-fi
-
-if [ -f "$BASE_DIR/log4j2-config.xml" ]; then
-  sudo rm "$BASE_DIR/log4j2-config.xml"
-fi
-
-# Move the COMPOSE_DIR to the container_name directory
-container_dir="$BUILD_DIR/${container_name}"
-mv "$COMPOSE_DIR"/* "$container_dir/"
-mv "$COMPOSE_DIR"/.env "$container_dir/"
-rm "$COMPOSE_DIR" -r
+# Clean up the install directory and prompt user to delete Docker images and containers
+cleanup "$BASE_DIR" "$BUILD_DIR" "$COMPOSE_DIR" "$container_name"
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
@@ -142,12 +128,12 @@ echo "To stop and destroy the Docker Wowza container, type:
 sudo docker compose -f $container_dir/docker-compose.yml down
 
 To stop the container without destroying it, type:
-sudo docker ${container_name} stop
+sudo docker $container_name stop
 To start the container after stopping it, type:
-sudo docker ${container_name} start
+sudo docker $container_name start
 
 To access the container directly, type:
-sudo docker exec -it ${container_name} bash
+sudo docker exec -it $container_name bash
 "
 echo "
 Check $container_dir for Engine Logs and contents directories

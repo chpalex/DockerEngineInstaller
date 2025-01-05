@@ -8,6 +8,7 @@ create_and_run_docker_compose() {
   local wse_mgr_user=$4
   local wse_mgr_pass=$5
   local container_name=$6
+  local container_dir=$7
 
   # Define volume directories
   logs_dir="$build_dir/${container_name}/Engine_logs"
@@ -18,7 +19,7 @@ create_and_run_docker_compose() {
   mkdir -p "$content_dir"
 
   # Create docker-compose.yml
-  cat <<EOL > docker-compose.yml
+  cat <<EOL > "$container_dir/docker-compose.yml"
 services:
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
