@@ -4,6 +4,9 @@
 # set -e
 # set -x
 
+#Set colors to Wowza colors
+w='\033[38;5;208m'
+
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
@@ -61,11 +64,11 @@ source "$SCRIPT_DIR/engine_file_fetch.sh"
 source "$SCRIPT_DIR/cleanup.sh"
 
 # Check if Docker is installed
-echo "Checking if Docker is installed"
+echo -e "${w}Checking if Docker is installed"
 if ! command -v docker &> /dev/null; then
   install_docker
 else
-  echo "Docker found"
+  echo -e "${w}Docker found"
 fi
 
 # Check if jq is installed
@@ -76,7 +79,7 @@ fi
 # Fetch and set Wowza Engine version
 engine_version=$(fetch_and_set_wowza_versions)
 if [ $? -ne 0 ]; then
-  echo "Installation cancelled by user."
+  echo -e "${w}Installation cancelled by user."
   exit 1
 fi
 
@@ -118,7 +121,7 @@ public_ip=$(curl -s ifconfig.me)
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
-echo "To stop and destroy the Docker Wowza container, type:
+echo -e "${w}To stop and destroy the Docker Wowza container, type:
 cd $container_dir && sudo docker compose down
 
 To stop the container without destroying it, type:
@@ -129,12 +132,12 @@ sudo docker $container_name start
 To access the container directly, type:
 sudo docker exec -it $container_name bash
 "
-echo "
+echo -e "${w}
 Check $container_dir for Engine Logs and contents directories
 "
 if [ -n "$jks_domain" ]; then
-  echo "To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"
+  echo -e "${w}To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"
 else
-  echo "To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
-  echo "To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
+  echo -e "${w}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
+  echo -e "${w}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
 fi
