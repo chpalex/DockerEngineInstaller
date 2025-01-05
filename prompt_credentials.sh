@@ -35,9 +35,9 @@ prompt_credentials() {
 
 check_env_prompt_credentials() {
 # Check if .env file exists
-if [ -f "$container_dir/.env" ]; then
+if [ -f $container_dir/.env ]; then
   # Read existing values from .env file
-  source "$container_dir/.env"
+  source $container_dir/.env
   # Present a whiptail window with existing data allowing user to make changes
   prompt_credentials "$WSE_MGR_USER" "$WSE_LIC"
 else
