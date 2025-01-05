@@ -35,6 +35,7 @@ cleanup() {
   mv "$compose_dir"/* "$container_dir/"
   mv "$build_dir/.env" "$container_dir/"
   mv "$build_dir/docker-compose.yml" "$container_dir/"
+  rm "$COMPOSE_DIR" -r
 
   # Prompt user to select Docker images and containers to delete
   local images=$(docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}")
