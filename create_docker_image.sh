@@ -46,6 +46,7 @@ EOL
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/log4j2-config.xml" >> Dockerfile
   fi
   
+  echo -e "\033[166;49mCreating Docker image for Wowza Engine version $engine_version...\033[0m"]
   # Build the Docker image from specified version
   sudo docker build . -t wowza_engine:$engine_version
 }
