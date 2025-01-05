@@ -36,4 +36,4 @@ cleanup() {
   mv "$build_dir/.env" "$container_dir/"
   mv "$build_dir/docker-compose.yml" "$container_dir/"
   rm -r "$compose_dir"
-  }
+}
