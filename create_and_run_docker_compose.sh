@@ -49,10 +49,6 @@ EOL
   cd "$container_dir"
   sudo docker compose up -d
 
-  # Wait for the services to start and print logs
-  echo "Waiting for services to start..."
-  sleep 3  # Adjust the sleep time as needed
-
   echo "Printing docker compose logs..."
   sudo docker compose logs
 
