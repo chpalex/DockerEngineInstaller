@@ -31,9 +31,7 @@ cleanup() {
 
   # Move the COMPOSE_DIR to the container_name directory
   local container_dir="$build_dir/${container_name}"
-  mkdir -p "$container_dir"
   mv "$compose_dir"/* "$container_dir/"
-  mv "$build_dir/.env" "$container_dir/"
-  mv "$build_dir/docker-compose.yml" "$container_dir/"
+  mv "$compose_dir/.env" "$container_dir/"
   rm -r "$compose_dir"
 }
