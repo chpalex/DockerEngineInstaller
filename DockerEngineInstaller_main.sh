@@ -104,7 +104,6 @@ container_dir="$BUILD_DIR/$container_name"
 check_env_prompt_credentials "$container_dir"
 
 # Create and run docker compose
-
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 
 # Clean up the install directory and prompt user to delete Docker images and containers
