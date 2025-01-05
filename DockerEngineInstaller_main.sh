@@ -128,6 +128,8 @@ fi
 # Move the COMPOSE_DIR to the container_name directory
 container_dir="$BUILD_DIR/${container_name}"
 mv "$COMPOSE_DIR"/* "$container_dir/"
+mv "$COMPOSE_DIR"/.env "$container_dir/"
+rm "$COMPOSE_DIR" -r
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
@@ -140,15 +142,15 @@ echo "To stop and destroy the Docker Wowza container, type:
 sudo docker compose -f $container_dir/docker-compose.yml down
 
 To stop the container without destroying it, type:
-sudo docker compose -f $container_dir/docker-compose.yml stop
+sudo docker ${container_name} stop
 To start the container after stopping it, type:
-sudo docker compose -f $container_dir/docker-compose.yml start
+sudo docker ${container_name} start
 
 To access the container directly, type:
 sudo docker exec -it ${container_name} bash
 "
 echo "
-Check $BUILD_DIR for Engine Logs and contents directories
+Check $container_dir for Engine Logs and contents directories
 "
 if [ -n "$jks_domain" ]; then
   echo "To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"

@@ -8,12 +8,6 @@ create_and_run_docker_compose() {
   local wse_mgr_user=$4
   local wse_mgr_pass=$5
 
-  # Prompt for Docker container name
-  container_name=$(whiptail --inputbox "Enter Docker container name (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ] || [ -z "$container_name" ]; then
-    container_name="wse_${engine_version}"
-  fi
-
   # Define volume directories
   logs_dir="$build_dir/${container_name}/Engine_logs"
   content_dir="$build_dir/${container_name}/Engine_content"
