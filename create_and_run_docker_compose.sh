@@ -7,6 +7,7 @@ create_and_run_docker_compose() {
   local wse_lic=$3
   local wse_mgr_user=$4
   local wse_mgr_pass=$5
+  local container_name=$6
 
   # Define volume directories
   logs_dir="$build_dir/${container_name}/Engine_logs"
