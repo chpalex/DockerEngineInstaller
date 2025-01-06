@@ -1,8 +1,8 @@
 #!/bin/bash
 
+tuning () {
 local engine_conf_dir=$1
 
-tuning () {
 # Server Tuning #
 echo "Tuning Network Sockets and Server Threads"
 # Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>
