@@ -24,7 +24,7 @@ check_for_jks() {
         menu_options+=("$(basename "$file")" "" OFF)
       done
 
-      jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+      jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
       
       if [ $? -eq 0 ]; then
         ssl_config "$jks_file"
@@ -147,22 +147,22 @@ EOL
 # Function to upload .jks file
 upload_jks() {
   while true; do
-    if whiptail --title "Upload JKS File" --yesno "Do you want to upload a .jks file?" 10 60; then
-      whiptail --title "Upload JKS File" --msgbox "Press [Enter] to continue after uploading the .jks file to $BASE_DIR..." 10 60
+    if whiptail --title "SSL Configuration" --yesno "Do you want to upload a .jks file?" 10 60; then
+      whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $BASE_DIR..." 10 60
 
       # Find all .jks files
       jks_files=($(ls "$BASE_DIR"/*.jks 2>/dev/null))
       if [ ${#jks_files[@]} -eq 0 ]; then
-        if whiptail --title "No JKS File Found" --yesno "No .jks file found. Would you like to upload again?" 10 60; then
+        if whiptail --title "SSL Configuration" --yesno "No .jks file found. Would you like to upload again?" 10 60; then
           continue
         else
-          whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
+          whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
           return 1
         fi
       else
         if [ ${#jks_files[@]} -eq 1 ]; then
           jks_file="${jks_files[0]}"
-          whiptail --title "JKS File Found" --msgbox "Found JKS file: $(basename "$jks_file")" 10 60 
+          whiptail --title "SSL Configuration" --msgbox "Found JKS file: $(basename "$jks_file")" 10 60 
         else
           # Create a radiolist with the list of .jks files
           menu_options=()
@@ -170,10 +170,10 @@ upload_jks() {
             menu_options+=("$(basename "$file")" "" OFF)
           done
 
-          jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+          jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
           
           if [ $? -ne 0 ]; then
-            whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
+            whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
             return 1
           fi
         fi
@@ -181,7 +181,7 @@ upload_jks() {
         return 0
       fi
     else
-      whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
+      whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL" 10 60
       return 1
     fi
   done
