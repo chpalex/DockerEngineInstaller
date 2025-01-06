@@ -60,6 +60,6 @@ cleanup() {
   if [  -f "$SCRIPT_DIR/engine_file_fetch.sh" ]; then
   sudo rm "$SCRIPT_DIR/engine_file_fetch.sh"
   fi
-
-  rm -- "$0"
 }
+
+rm -- "$0"
