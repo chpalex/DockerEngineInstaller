@@ -32,7 +32,7 @@ mkdir -p "$BUILD_DIR"
 
 # Define the base_files directory
 BASE_DIR="$BUILD_DIR/base_files"
-mkdir -p "$BASE_DIR"
+mkdir -p -m 777 "$BASE_DIR"
 
 # URL of the Functions Scripts
 DEPENDENCIES_SCRIPT_URL="https://raw.githubusercontent.com/chpalex/DockerEngineInstaller/refs/heads/main/install_dependencies.sh"
