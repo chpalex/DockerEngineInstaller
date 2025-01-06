@@ -3,8 +3,8 @@
 # Function to scan for .jks file
 check_for_jks() {
 
-  echo "Starting SSL Configuration"
-  echo "Searching for existing SSL Java Key Store (JKS) files"
+  echo "Starting SSL Configuration
+  Searching for existing SSL Java Key Store (JKS) files in $BASE_DIR"
   echo "Files found in $BASE_DIR:"
   ls -1 "$BASE_DIR"
 
@@ -135,9 +135,9 @@ upload_jks() {
     if whiptail --title "Upload JKS File" --yesno "Do you want to upload a .jks file?" 10 60; then
       whiptail --title "Upload JKS File" --msgbox "Press [Enter] to continue after uploading the .jks file to $BASE_DIR..." 10 60
 
-      # Find the .jks file
-      jks_file=$(ls "$BASE_DIR"/*.jks 2>/dev/null | head -n 1)
-      if [ -z "$jks_file" ]; then
+      # Find all .jks files
+      jks_files=($(ls "$BASE_DIR"/*.jks 2>/dev/null))
+      if [ ${#jks_files[@]} -eq 0 ]; then
         if whiptail --title "No JKS File Found" --yesno "No .jks file found. Would you like to upload again?" 10 60; then
           continue
         else
@@ -145,7 +145,23 @@ upload_jks() {
           return 1
         fi
       else
-        whiptail --title "JKS File Found" --msgbox "Found JKS file: $jks_file" 10 60
+        if [ ${#jks_files[@]} -eq 1 ]; then
+          jks_file="${jks_files[0]}"
+          whiptail --title "JKS File Found" --msgbox "Found JKS file: $jks_file" 10 60
+        else
+          # Create a radiolist with the list of .jks files
+          menu_options=()
+          for file in "${jks_files[@]}"; do
+            menu_options+=("$file" "$(basename "$file")" OFF)
+          done
+
+          jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+          
+          if [ $? -ne 0 ]; then
+            whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
+            return 1
+          fi
+        fi
         ssl_config "$jks_file"
         return 0
       fi
