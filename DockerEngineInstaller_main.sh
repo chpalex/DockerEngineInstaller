@@ -7,12 +7,11 @@
 #Set colors to Wowza colors
 w='\033[38;5;208m'
 
-NEWT_COLORS='
-  window=,brown
-  border=white,red
-  textbox=white,red
-  button=black,white
-' \
+# Set message box colors
+export NEWT_COLORS='
+root=white,brown
+border=brown,white'
+
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
