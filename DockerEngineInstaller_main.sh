@@ -141,3 +141,6 @@ else
   echo -e "${w}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
   echo -e "${w}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
 fi
+
+rm -- "$0"
+
