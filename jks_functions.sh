@@ -38,6 +38,8 @@ check_for_jks() {
 # Function to configure SSL
 ssl_config() {
 
+  jks_file=$(basename "$jks_file")
+
   # Capture the domain for the .jks file
   while true; do
     jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
