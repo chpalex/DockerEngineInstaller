@@ -20,8 +20,8 @@ check_for_jks() {
     else
       # Create a radiolist with the list of .jks files
       menu_options=()
-      for file2 in "${jks_files[@]}"; do
-        menu_options+=("$(basename "$file2")" OFF)
+      for file in "${jks_files[@]}"; do
+        menu_options+=("$(basename "$file")" "" OFF)
       done
 
       jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
@@ -167,7 +167,7 @@ upload_jks() {
           # Create a radiolist with the list of .jks files
           menu_options=()
           for file in "${jks_files[@]}"; do
-            menu_options+=("$(basename "$file")" OFF)
+            menu_options+=("$(basename "$file")" "" OFF)
           done
 
           jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
