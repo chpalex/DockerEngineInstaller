@@ -12,7 +12,7 @@ check_for_jks() {
   else
     if [ ${#jks_files[@]} -eq 1 ]; then
       jks_file="${jks_files[0]}"
-      if whiptail --title "JKS File/s Detected" --yesno "A .jks file/s ($jks_file) was detected. Do you want to use this file/s?" 10 60; then
+      if whiptail --title "JKS File/s Detected" --yesno "A .jks file $(basename "$jks_file") was detected. Do you want to use this file?" 10 60; then
         ssl_config "$jks_file"
       else
         upload_jks
@@ -162,7 +162,7 @@ upload_jks() {
       else
         if [ ${#jks_files[@]} -eq 1 ]; then
           jks_file="${jks_files[0]}"
-          whiptail --title "JKS File Found" --msgbox "Found JKS file: $jks_file" 10 60
+          whiptail --title "JKS File Found" --msgbox "Found JKS file: $(basename "$jks_file")" 10 60 
         else
           # Create a radiolist with the list of .jks files
           menu_options=()
