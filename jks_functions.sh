@@ -164,6 +164,6 @@ upload_jks() {
 
   # Copy the .jks file to the Engine conf directory
   if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
-    sudo cp $base_files/${jks_file} $engine_conf_dir/${jks_file}
+    cp "$base_files/$jks_file" "$engine_conf_dir/$jks_file"
   fi
 }
