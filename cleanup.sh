@@ -59,8 +59,9 @@ cleanup() {
   if [  -f "$script_dir/engine_file_fetch.sh" ]; then
   sudo rm "$script_dir/engine_file_fetch.sh"
   fi
+  
+  rm "$script_dir/cleanup.sh"
 }
 
 rm -- "$0"
-rm "$script_dir/cleanup.sh"
 
