@@ -116,7 +116,7 @@ check_env_prompt_credentials "$container_dir"
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 
 # Clean up the install directory and prompt user to delete Docker images and containers
-cleanup "$BASE_DIR" "$BUILD_DIR" "$container_name" "$SCRIPT_DIR"
+cleanup "$BASE_DIR" "$SCRIPT_DIR"
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
@@ -145,8 +145,3 @@ else
   echo -e "${w}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
   echo -e "${w}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
 fi
-
-# Remove downloaded main script
-rm DockerEngineInstaller.sh
-
-
