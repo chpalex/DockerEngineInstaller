@@ -39,8 +39,8 @@ check_for_jks() {
 ssl_config() {
 local jks_file="$1"
 
+  # Extract the base name of the jks_file
   jks_file=$(basename "$jks_file")
-  echo "JKS File: $jks_file"
 
   # Capture the domain for the .jks file
   while true; do
