@@ -121,57 +121,37 @@ EOL
   sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml"
 
+  # Copy the .jks file to the Engine conf directory
+  if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
+    cp "$base_files/$jks_file" "$engine_conf_dir/$jks_file"
+  else
+    exit 1
+  fi
 }
 
 # Function to upload .jks file
 upload_jks() {
-  local engine_conf_dir=$1
+  while true; do
+    if whiptail --title "Upload JKS File" --yesno "Do you want to upload a .jks file?" 10 60; then
+      whiptail --title "Upload JKS File" --msgbox "Press [Enter] to continue after uploading the .jks file to $BASE_DIR..." 10 60
 
-  read -p "Do you want to upload a .jks file? (y/n): " upload_jks
-  case $upload_jks in
-    [Yy]* )
-      while true; do
-        read -p "Press [Enter] to continue after uploading the .jks file to $BASE_DIR..." 
-
-        # Find the .jks file
-        jks_file=$(ls "$BASE_DIR"/*.jks 2>/dev/null | head -n 1)
-        if [ -z "$jks_file" ]; then
-          read -p "No .jks file found. Would you like to upload again? (y/n): " upload_again
-          case $upload_again in
-            [Yy]* )
-             #removeTest# read -p "Press [Enter] to continue after uploading the files..."
-              ;;
-            [Nn]* )
-              echo "You chose not to add a .jks file. Moving on to tuning."
-              return 1
-              ;;
-            * )
-              echo "Please answer yes or no."
-              ;;
-          esac
+      # Find the .jks file
+      jks_file=$(ls "$BASE_DIR"/*.jks 2>/dev/null | head -n 1)
+      if [ -z "$jks_file" ]; then
+        if whiptail --title "No JKS File Found" --yesno "No .jks file found. Would you like to upload again?" 10 60; then
+          continue
         else
-          check_for_jks
-          return 0
+          whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
+          return 1
         fi
-      done
-      ;;
-    [Nn]* )
-      echo "You chose not to add a .jks file. Moving on to tuning."
+      else
+        whiptail --title "JKS File Found" --msgbox "Found JKS file: $jks_file" 10 60
+        ssl_config "$jks_file"
+        return 0
+      fi
+    else
+      whiptail --title "No JKS File" --msgbox "You chose not to add a .jks file. Moving on to tuning." 10 60
       return 1
-      ;;
-    * )
-      echo "Please answer yes or no."
-      upload_jks
-      ;;
-  esac
-
-  # Copy the .jks file to the Engine conf directory
-  if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
-    echo "Copying $jks_file to $engine_conf_dir"
-    cp "$base_files/$jks_file" "$engine_conf_dir/$jks_file"
-    echo "Testing $engine_conf_dir availability"
-  else
-    echo "Testing $engine_conf_dir availability (else)"
-    exit 1
-  fi
+    fi
+  done
 }
