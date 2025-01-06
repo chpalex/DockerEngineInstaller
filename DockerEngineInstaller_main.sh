@@ -9,8 +9,7 @@ w='\033[38;5;208m'
 
 # Set message box colors
 export NEWT_COLORS='
-root=red,brown
-border=brown,red'
+root=,black'
 
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
