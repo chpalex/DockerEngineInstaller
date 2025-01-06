@@ -42,7 +42,7 @@ if whiptail --title "Demo Live Stream" --yesno "Do you want to add a demo live s
 
   # Insert the new property at the found line number
   if [ -n "$line_number" ]; then
-    sed -i "${line_number}i <Property>\n<Name>streamDemoPublisherConfig</Name>\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\n\Type>String</Type>\n</Property>" "$engine_conf_dir/Server.xml"
+    sed -i "${line_number}i <Property>\n<Name>streamDemoPublisherConfig</Name>\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\n\<Type>String</Type>\n</Property>" "$engine_conf_dir/Server.xml"
   fi
 fi
 

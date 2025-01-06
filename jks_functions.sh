@@ -34,7 +34,6 @@ check_for_jks() {
 ssl_config() {
   read -p "Provide the domain for .jks file (e.g., myWowzaDomain.com): " jks_domain
   read -s -p "Please enter the .jks password (to establish https connection to Wowza Manager): " jks_password
-  echo
 
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
@@ -163,7 +162,7 @@ upload_jks() {
       ;;
   esac
 
-    # Copy the .jks file to the Engine conf directory
+  # Copy the .jks file to the Engine conf directory
   if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
     sudo cp $base_files/${jks_file} $engine_conf_dir/${jks_file}
   fi

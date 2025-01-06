@@ -20,6 +20,11 @@ RUN apt install nano
 WORKDIR /usr/local/WowzaStreamingEngine/
 EOL
 
+  if [ -f "$base_dir/tomcat.properties" ]; then
+    echo "COPY base_files/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
+    echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
+  fi
+  
   # Build the Docker image from specified version
   sudo docker build . -t wowza_engine:$engine_version
 }
