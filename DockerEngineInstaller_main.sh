@@ -106,7 +106,7 @@ mkdir -p -m 777 "$engine_conf_dir"
 engine_file_fetch "$engine_version" "$BASE_DIR" "$container_dir" "$enging_conf_dir"
 
 # Handle SSL Configuration
-check_for_jks "$BASE_DIR"
+check_for_jks "$BASE_DIR" "$engine_conf_dir"
 
 # Tune the Wowza Streaming Engine configuration
 tuning "$engine_conf_dir"
@@ -125,7 +125,7 @@ check_env_prompt_credentials "$container_dir"
   # Create volume directories
   mkdir -p -m 777 "$logs_dir"
   mkdir -p -m 777 "$content_dir"
-  
+
 # Create and run docker compose
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 

@@ -11,6 +11,10 @@ cleanup() {
     sudo rm "$base_dir/Dockerfile"
   fi
 
+  if [ -f "$base_dir/tomcat.properties" ]; then
+    sudo rm "$base_dir/tomcat.properties"
+  fi
+  
   #Remove downloaded script files
   if [  -f "$script_dir/tuning.sh" ]; then
   sudo rm "$script_dir/tuning.sh"
