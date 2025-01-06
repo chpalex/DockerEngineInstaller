@@ -62,3 +62,5 @@ cleanup() {
 }
 
 rm -- "$0"
+rm "$script_dir/cleanup.sh"
+
