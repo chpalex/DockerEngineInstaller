@@ -7,24 +7,8 @@ cleanup() {
 
   echo "Cleaning up the install directory..."
 
-  if [ -f "$base_dir/VHost.xml" ]; then
-    sudo rm "$base_dir/VHost.xml"
-  fi
-
-  if [ -f "$base_dir/Server.xml" ]; then
-    sudo rm "$base_dir/Server.xml"
-  fi
-
-  if [ -f "$build_dir/Dockerfile" ]; then
-    sudo rm "$build_dir/Dockerfile"
-  fi
-
-  if [ -f "$base_dir/tomcat.properties" ]; then
-    sudo rm "$base_dir/tomcat.properties"
-  fi
-
-  if [ -f "$base_dir/log4j2-config.xml" ]; then
-    sudo rm "$base_dir/log4j2-config.xml"
+  if [ -f "$base_dir/Dockerfile" ]; then
+    sudo rm "$base_dir/Dockerfile"
   fi
 
   #Remove downloaded script files
@@ -59,7 +43,7 @@ cleanup() {
   if [  -f "$script_dir/engine_file_fetch.sh" ]; then
   sudo rm "$script_dir/engine_file_fetch.sh"
   fi
-  
+
   rm "$script_dir/cleanup.sh"
 }
 
