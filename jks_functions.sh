@@ -39,18 +39,31 @@ check_for_jks() {
 ssl_config() {
 
   # Capture the domain for the .jks file
-  jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ]; then
-    whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Exiting." 10 60
-    return 1
-  fi
+  while true; do
+    jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ] && [ -n "$jks_domain" ]; then
+      break
+    else
+      if ! whiptail --title "SSL Configuration" --yesno "Domain input is required. Do you want to try again?" 10 60; then
+        whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Exiting." 10 60
+        return 1
+      fi
+    fi
+  done
 
   # Capture the password for the .jks file
-  jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (to establish https connection to Wowza Manager):" 10 60 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ]; then
-    whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Exiting." 10 60
-    return 1
-  fi
+  while true; do
+    jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (to establish https connection to Wowza Manager):" 10 60 3>&1 1>&2 2>&3)
+    if [ $? -eq 0 ] && [ -n "$jks_password" ]; then
+      break
+    else
+      if ! whiptail --title "SSL Configuration" --yesno "Password input is required. Do you want to try again?" 10 60; then
+        whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Exiting." 10 60
+        return 1
+      fi
+    fi
+  done
+
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
 
