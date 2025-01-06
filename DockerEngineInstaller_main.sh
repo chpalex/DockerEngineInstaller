@@ -117,6 +117,15 @@ create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 # Prompt for credentials and license key
 check_env_prompt_credentials "$container_dir"
 
+  # Define volume directories
+  logs_dir="$container_dir/Engine_logs"
+  content_dir="$container_dir/Engine_content"
+  engine_conf_dir="$container_dir/Engine_conf"
+
+  # Create volume directories
+  mkdir -p -m 777 "$logs_dir"
+  mkdir -p -m 777 "$content_dir"
+  
 # Create and run docker compose
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 
