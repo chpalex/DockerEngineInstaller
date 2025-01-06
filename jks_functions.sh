@@ -2,43 +2,58 @@
 
 # Function to scan for .jks file
 check_for_jks() {
+  whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration\nSearching for existing SSL Java Key Store (JKS) files in $BASE_DIR" 10 60
 
-  echo "Starting SSL Configuration
-  Searching for existing SSL Java Key Store (JKS) files in $BASE_DIR"
-  echo "Files found in $BASE_DIR:"
-  ls -1 "$BASE_DIR"
-
-  # Find the .jks file
-  jks_file=$(ls "$BASE_DIR"/*.jks 2>/dev/null | head -n 1)
-  if [ -z "$jks_file" ]; then
-    echo "No .jks file found."
+  # Find all .jks files
+  jks_files=($(ls "$BASE_DIR"/*.jks 2>/dev/null))
+  if [ ${#jks_files[@]} -eq 0 ]; then
+    whiptail --title "SSL Configuration" --msgbox "No .jks file found." 10 60
     upload_jks
   else
-    jks_file=$(basename "$jks_file")
-    read -p "A .jks file ($jks_file) was detected. Do you want to use this file? (y/n): " use_detected_jks
-    case $use_detected_jks in
-      [Yy]* )
-        ssl_config
-        ;;
-      [Nn]* )
+    if [ ${#jks_files[@]} -eq 1 ]; then
+      jks_file="${jks_files[0]}"
+      if whiptail --title "JKS File/s Detected" --yesno "A .jks file/s ($jks_file) was detected. Do you want to use this file/s?" 10 60; then
+        ssl_config "$jks_file"
+      else
         upload_jks
-        ;;
-      * )
-        echo "Please answer yes or no."
-        check_for_jks
-        ;;
-    esac
+      fi
+    else
+      # Create a radiolist with the list of .jks files
+      menu_options=()
+      for file in "${jks_files[@]}"; do
+        menu_options+=("$(basename "$file")" OFF)
+      done
+
+      jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+      
+      if [ $? -eq 0 ]; then
+        ssl_config "$jks_file"
+      else
+        upload_jks
+      fi
+    fi
   fi
 }
 
 # Function to configure SSL
 ssl_config() {
-  read -p "Provide the domain for .jks file (e.g., myWowzaDomain.com): " jks_domain
-  read -s -p "Please enter the .jks password (to establish https connection to Wowza Manager): " jks_password
 
+  # Capture the domain for the .jks file
+  jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
+  if [ $? -ne 0 ]; then
+    whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Exiting." 10 60
+    return 1
+  fi
+
+  # Capture the password for the .jks file
+  jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (to establish https connection to Wowza Manager):" 10 60 3>&1 1>&2 2>&3)
+  if [ $? -ne 0 ]; then
+    whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Exiting." 10 60
+    return 1
+  fi
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
-  echo "Setting up SSL for streaming and Manager access"
+
   cat <<EOL > "$BASE_DIR/tomcat.properties"
 httpsPort=8090
 httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}
@@ -152,7 +167,7 @@ upload_jks() {
           # Create a radiolist with the list of .jks files
           menu_options=()
           for file in "${jks_files[@]}"; do
-            menu_options+=("$file" "$(basename "$file")" OFF)
+            menu_options+=("$(basename "$file")" OFF)
           done
 
           jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
