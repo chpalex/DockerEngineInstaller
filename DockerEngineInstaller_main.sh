@@ -6,10 +6,14 @@
 
 #Set colors to Wowza colors
 w='\033[38;5;208m'
+NOCOLOR='\033[0m'
+yellow='\033[38;5;226m'
+white='\033[38;5;15m'
 
 # Set message box colors
 export NEWT_COLORS='
-root=,black'
+root=,black
+textbox=,black'
 
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
@@ -93,21 +97,23 @@ if [ $? -ne 0 ] || [ -z "$container_name" ]; then
   container_name="wse_${engine_version}"
 fi
 
-# Copy Engine files from the Wowza Engine Docker image
-engine_file_fetch "$engine_version" "$BASE_DIR"
-
-# Handle SSL Configuration
-check_for_jks
-
-# Tune the Wowza Streaming Engine configuration
-tuning
-
-# Create a Dockerfile and build the Docker image
-create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
-
 # Define the Container directory
 container_dir="$BUILD_DIR/$container_name"
 mkdir -p "$container_dir"
+engine_conf_dir="$container_dir/Engine_conf"
+mkdir -p -m 777 "$engine_conf_dir"
+
+# Copy Engine files from the Wowza Engine Docker image
+engine_file_fetch "$engine_version" "$BASE_DIR" "$container_dir" "$enging_conf_dir"
+
+# Handle SSL Configuration
+check_for_jks "$BASE_DIR"
+
+# Tune the Wowza Streaming Engine configuration
+tuning "$engine_conf_dir"
+
+# Create a Dockerfile and build the Docker image
+create_docker_image "$BUILD_DIR" "$BASE_DIR" "$engine_version" "$jks_file"
 
 # Prompt for credentials and license key
 check_env_prompt_credentials "$container_dir"
@@ -126,22 +132,23 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
-cd $container_dir && sudo docker compose down
+${white}cd $container_dir && sudo docker compose down && cd $container_dir${NOCOLOR}
 
 To stop the container without destroying it, type:
-sudo docker $container_name stop
+${white}sudo docker $container_name stop${NOCOLOR}
+
 To start the container after stopping it, type:
-sudo docker $container_name start
+${white}sudo docker $container_name start${NOCOLOR}
 
 To access the container directly, type:
-sudo docker exec -it $container_name bash
+${white}sudo docker exec -it $container_name bash${NOCOLOR}
 "
 echo -e "${w}
-Check $container_dir for Engine Logs and contents directories
+Check ${white}$container_dir${NOCOLOR} for Engine Logs and contents directories
 "
 if [ -n "$jks_domain" ]; then
-  echo -e "${w}To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"
 else
-  echo -e "${w}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
-  echo -e "${w}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager${NOCOLOR}"
 fi
