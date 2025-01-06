@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Debug
- set -e
- set -x
-
 # Function to scan for .jks file
 check_for_jks() {
   whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration\nSearching for existing SSL Java Key Store (JKS) files in $BASE_DIR" 10 60
@@ -24,8 +20,8 @@ check_for_jks() {
     else
       # Create a radiolist with the list of .jks files
       menu_options=()
-      for file in "${jks_files[@]}"; do
-        menu_options+=("$(basename "$file")" OFF)
+      for file2 in "${jks_files[@]}"; do
+        menu_options+=("$(basename "$file2")" OFF)
       done
 
       jks_file=$(whiptail --title "Choose JKS File" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
