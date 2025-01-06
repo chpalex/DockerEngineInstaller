@@ -78,12 +78,8 @@ httpsKeyStorePassword=${jks_password}
 #httpsKeyAlias=[key-alias]
 EOL
 
-echo "tomcat.properties file created"
-
   # Change the <Port> line to have only 1935,554 ports
   sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' "$engine_conf_dir/VHost.xml"
-
-echo "Port line changed"
 
   # Edit the VHost.xml file to include the new HostPort block with the JKS and password information
   sed -i '/<\/HostPortList>/i \
@@ -143,8 +139,6 @@ echo "Port line changed"
       </HTTPProviders>\
   </HostPort>' "$engine_conf_dir/VHost.xml"
 
-echo "HostPort block added"
-
   # Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
   sed -i '/<\/Manager>/i \
   <TestPlayer>\
@@ -153,19 +147,15 @@ echo "HostPort block added"
       <SSLEnable>true</SSLEnable>\
   </TestPlayer>' "$engine_conf_dir/VHost.xml"
 
-echo "TestPlayer block added"
-
   # Edit the Server.xml file to include the JKS and password information
   sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml"
 
-echo "Server.xml file edited"
-
   # Copy the .jks file to the Engine conf directory
-  if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
-    cp "$base_files/$jks_file" "$engine_conf_dir/$jks_file"
+  if [ -n "$jks_file" ] && [ -f "$BASE_DIR/$jks_file" ]; then
+    cp "$BASE_DIR/$jks_file" "$engine_conf_dir/$jks_file"
   else
     exit 1
   fi
