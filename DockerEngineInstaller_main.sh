@@ -10,14 +10,14 @@ w='\033[38;5;208m'
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
-- Fetch and set Wowza Engine versions
+- Fetch a list of available Docker Wowza Engine versions
 - Handle SSL configuration
 - Tune Wowza Streaming Engine configuration
-- Create Docker image for Wowza Engine
-- Prompt for credentials and license key
-- Create and run Docker Compose
+- Create a custom Docker image for Wowza Engine
+- Prompt for Engine credentials and license key
+- Create and run Docker Compose file
 - Clean up installation files
-- Provide instructions to connect to Wowza Streaming Engine Manager" 20 78
+- Provide instructions to manage and connect to Wowza Streaming Engine" 20 78
 
 # Get the directory of the script
 SCRIPT_DIR=$(realpath $(dirname "$0"))
