@@ -33,9 +33,9 @@ services:
       - "554:554"
       - "8084-8090:8084-8090/tcp"
     volumes:
-      - $logs_dir:/usr/local/WowzaStreamingEngine/logs
-      - $content_dir:/usr/local/WowzaStreamingEngine/content
-      - $engine_conf_dir:/usr/local/WowzaStreamingEngine/conf
+      - $logs_dir:/usr/local/WowzaStreamingEngine
+      - $content_dir:/usr/local/WowzaStreamingEngine
+      - $engine_conf_dir:/usr/local/WowzaStreamingEngine
 
     entrypoint: /sbin/entrypoint.sh
     env_file: 
