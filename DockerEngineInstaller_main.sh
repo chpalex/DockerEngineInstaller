@@ -133,21 +133,21 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down && cd $container_dir${NOCOLOR}
 
-To stop the container without destroying it, type:
+${w}To stop the container without destroying it, type:
 ${white}sudo docker $container_name stop${NOCOLOR}
 
-To start the container after stopping it, type:
+${w}To start the container after stopping it, type:
 ${white}sudo docker $container_name start${NOCOLOR}
 
-To access the container directly, type:
+${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash${NOCOLOR}
 "
 echo -e "${w}
-Check ${white}$container_dir${NOCOLOR} for Engine Logs and contents directories
+Check ${white}$container_dir${w} for Engine Logs and contents directories
 "
 if [ -n "$jks_domain" ]; then
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: https://${jks_domain}:8090/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager"
 else
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: http://$public_ip:8088/enginemanager"
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager${NOCOLOR}"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: ${w}http://$public_ip:8088/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: ${w}http://$private_ip:8088/enginemanager${NOCOLOR}"
 fi
