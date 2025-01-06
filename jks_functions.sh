@@ -2,6 +2,7 @@
 
 # Function to scan for .jks file
 check_for_jks() {
+
   echo "Starting SSL Configuration"
   echo "Searching for existing SSL Java Key Store (JKS) files"
   echo "Files found in $BASE_DIR:"
@@ -124,6 +125,8 @@ EOL
 
 # Function to upload .jks file
 upload_jks() {
+  local engine_conf_dir=$1
+
   read -p "Do you want to upload a .jks file? (y/n): " upload_jks
   case $upload_jks in
     [Yy]* )
@@ -164,6 +167,11 @@ upload_jks() {
 
   # Copy the .jks file to the Engine conf directory
   if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
+    echo "Copying $jks_file to $engine_conf_dir"
     cp "$base_files/$jks_file" "$engine_conf_dir/$jks_file"
+    echo "Testing $engine_conf_dir availability"
+  else
+    echo "Testing $engine_conf_dir availability (else)"
+    exit 1
   fi
 }
