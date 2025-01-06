@@ -47,7 +47,7 @@ httpsKeyStorePassword=${jks_password}
 EOL
 
   # Change the <Port> line to have only 1935,554 ports
-  sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' "$BASE_DIR/VHost.xml"
+  sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' "$engine_conf_dir/VHost.xml"
   
   # Edit the VHost.xml file to include the new HostPort block with the JKS and password information
   sed -i '/<\/HostPortList>/i \
@@ -105,7 +105,7 @@ EOL
               <AuthenticationMethod>none</AuthenticationMethod>\
           </HTTPProvider>\
       </HTTPProviders>\
-  </HostPort>' "$BASE_DIR/VHost.xml"
+  </HostPort>' "$engine_conf_dir/VHost.xml"
 
   # Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
   sed -i '/<\/Manager>/i \
@@ -113,13 +113,14 @@ EOL
       <IpAddress>'${jks_domain}'</IpAddress>\
       <Port>443</Port>\
       <SSLEnable>true</SSLEnable>\
-  </TestPlayer>' "$BASE_DIR/VHost.xml"
+  </TestPlayer>' "$engine_conf_dir/VHost.xml"
   
   # Edit the Server.xml file to include the JKS and password information
-  sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' "$BASE_DIR/Server.xml"
-  sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>|' "$BASE_DIR/Server.xml"
-  sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$BASE_DIR/Server.xml"
-  sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$BASE_DIR/Server.xml"
+  sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' "$engine_conf_dir/Server.xml"
+  sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>|' "$engine_conf_dir/Server.xml"
+  sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$engine_conf_dir/Server.xml"
+  sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml"
+
 }
 
 # Function to upload .jks file
@@ -161,4 +162,9 @@ upload_jks() {
       upload_jks
       ;;
   esac
+
+    # Copy the .jks file to the Engine conf directory
+  if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
+    sudo cp $base_files/${jks_file} $engine_conf_dir/${jks_file}
+  fi
 }

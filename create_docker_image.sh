@@ -20,12 +20,6 @@ RUN apt install nano
 WORKDIR /usr/local/WowzaStreamingEngine/
 EOL
 
-  # Append COPY commands if the files exist
-  if [ -n "$jks_file" ] && [ -f "$base_dir/$jks_file" ]; then
-    echo "COPY base_files/${jks_file} /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
-    echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/conf/${jks_file}" >> Dockerfile
-  fi
-
   # Build the Docker image from specified version
   sudo docker build . -t wowza_engine:$engine_version
 }

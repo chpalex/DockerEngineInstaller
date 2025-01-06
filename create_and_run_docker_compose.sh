@@ -13,7 +13,7 @@ create_and_run_docker_compose() {
   # Define volume directories
   logs_dir="$container_dir/Engine_logs"
   content_dir="$container_dir/Engine_content"
-  conf_dir="$container_dir/Engine_conf"
+  engine_conf_dir="$container_dir/Engine_conf"
 
   # Create volume directories
   mkdir -p -m 777 "$logs_dir"
@@ -33,9 +33,9 @@ services:
       - "554:554"
       - "8084-8090:8084-8090/tcp"
     volumes:
-      - $logs_dir:/usr/local/WowzaStreamingEngine/
-      - $content_dir:/usr/local/WowzaStreamingEngine/
-      - $engine_conf_dir:/usr/local/WowzaStreamingEngine/
+      - $logs_dir:/usr/local/WowzaStreamingEngine/logs
+      - $content_dir:/usr/local/WowzaStreamingEngine/contnet
+      - $engine_conf_dir:/usr/local/WowzaStreamingEngine/conf
 
     entrypoint: /sbin/entrypoint.sh
     env_file: 
