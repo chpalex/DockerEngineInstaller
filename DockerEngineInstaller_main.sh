@@ -147,5 +147,7 @@ else
   echo -e "${w}To connect to Wowza Streaming Engine Manager via private IP, go to: http://$private_ip:8088/enginemanager"
 fi
 
-rm -- "$0"
+# Remove downloaded main script
+rm DockerEngineInstaller.sh
+
 
