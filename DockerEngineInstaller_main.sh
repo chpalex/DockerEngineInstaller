@@ -7,17 +7,21 @@
 #Set colors to Wowza colors
 w='\033[38;5;208m'
 
+# Set message box colors
+export NEWT_COLORS='
+root=,black'
+
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
-- Fetch and set Wowza Engine versions
+- Fetch a list of available Docker Wowza Engine versions
 - Handle SSL configuration
 - Tune Wowza Streaming Engine configuration
-- Create Docker image for Wowza Engine
-- Prompt for credentials and license key
-- Create and run Docker Compose
+- Create a custom Docker image for Wowza Engine
+- Prompt for Engine credentials and license key
+- Create and run Docker Compose file
 - Clean up installation files
-- Provide instructions to connect to Wowza Streaming Engine Manager" 20 78
+- Provide instructions to manage and connect to Wowza Streaming Engine" 20 78
 
 # Get the directory of the script
 SCRIPT_DIR=$(realpath $(dirname "$0"))
@@ -112,7 +116,7 @@ check_env_prompt_credentials "$container_dir"
 create_and_run_docker_compose "$BUILD_DIR" "$engine_version" "$WSE_LIC" "$WSE_MGR_USER" "$WSE_MGR_PASS" "$container_name" "$container_dir"
 
 # Clean up the install directory and prompt user to delete Docker images and containers
-cleanup "$BASE_DIR" "$BUILD_DIR" "$container_name"
+cleanup "$BASE_DIR" "$SCRIPT_DIR"
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
