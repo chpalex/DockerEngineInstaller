@@ -38,6 +38,7 @@ check_for_jks() {
 # Function to configure SSL
 ssl_config() {
 
+
   # Capture the domain for the .jks file
   while true; do
     jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
@@ -66,7 +67,9 @@ ssl_config() {
 
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
-
+  jks_file=$(basename "$jks_file")
+  echo "JKS File: $jks_file"
+  
   cat <<EOL > "$BASE_DIR/tomcat.properties"
 httpsPort=8090
 httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}
