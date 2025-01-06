@@ -37,7 +37,10 @@ check_for_jks() {
 
 # Function to configure SSL
 ssl_config() {
+local jks_file="$1"
 
+  jks_file=$(basename "$jks_file")
+  echo "JKS File: $jks_file"
 
   # Capture the domain for the .jks file
   while true; do
@@ -67,9 +70,7 @@ ssl_config() {
 
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
-  jks_file=$(basename "$jks_file")
-  echo "JKS File: $jks_file"
-  
+
   cat <<EOL > "$BASE_DIR/tomcat.properties"
 httpsPort=8090
 httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}
