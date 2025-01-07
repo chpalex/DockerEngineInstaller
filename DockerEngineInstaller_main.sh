@@ -140,7 +140,7 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
-${white}cd $container_dir && sudo docker compose --rmi 'all' down && cd $SCRIPT_DIR${NOCOLOR}
+${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR${NOCOLOR}
 
 ${w}To stop the container without destroying it, type:
 ${white}cd $container_dir && sudo docker compose stop${NOCOLOR}
