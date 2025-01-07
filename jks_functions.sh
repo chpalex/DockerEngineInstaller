@@ -24,8 +24,19 @@ check_for_jks() {
         menu_options+=("$(basename "$file")" "" OFF)
       done
 
-      jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
-      
+      while true; do
+        jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+        
+        if [ $? -eq 0 ] && [ -n "$jks_file" ]; then
+          break
+        else
+          if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
+            whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
+            return 1
+          fi
+        fi
+      done
+
       if [ $? -eq 0 ]; then
         ssl_config "$jks_file"
       else
@@ -195,8 +206,19 @@ upload_jks() {
             menu_options+=("$(basename "$file")" "" OFF)
           done
 
-          jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
-          
+          while true; do
+            jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+            
+            if [ $? -eq 0 ] && [ -n "$jks_file" ]; then
+              break
+            else
+              if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
+                whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
+                return 1
+              fi
+            fi
+          done
+               
           if [ $? -ne 0 ]; then
             whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
             return 1
