@@ -26,5 +26,5 @@ EOL
   fi
   
   # Build the Docker image from specified version
-  sudo docker build . -t wowza_engine:$engine_version
+  sudo docker build -t wowza_engine:$engine_version .
 }
