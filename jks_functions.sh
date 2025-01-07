@@ -67,7 +67,7 @@ fi
       break
     else
       if ! whiptail --title "SSL Configuration" --yesno "Domain input is required. Do you want to try again?" 10 60; then
-        whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Exiting." 10 60
+        whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Continuing without SSL." 10 60
         return 1
       fi
     fi
@@ -80,7 +80,7 @@ fi
       break
     else
       if ! whiptail --title "SSL Configuration" --yesno "Password input is required. Do you want to try again?" 10 60; then
-        whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Exiting." 10 60
+        whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Continuing without SSL." 10 60
         return 1
       fi
     fi
@@ -218,7 +218,7 @@ upload_jks() {
               fi
             fi
           done
-               
+
           if [ $? -ne 0 ]; then
             whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
             return 1
