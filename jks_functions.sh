@@ -122,7 +122,7 @@ EOL
       <SocketConfiguration>\
           <ReuseAddress>true</ReuseAddress>\
           <ReceiveBufferSize>65000</ReceiveBufferSize>\
-          <ReadBufferSize>65000</ReceiveBufferSize>\
+          <ReadBufferSize>65000</ReadBufferSize>\
           <SendBufferSize>65000</SendBufferSize>\
           <KeepAlive>true</KeepAlive>\
           <AcceptorBackLog>100</AcceptorBackLog>\
