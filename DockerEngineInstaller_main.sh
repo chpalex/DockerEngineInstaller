@@ -143,10 +143,10 @@ echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose --rmi 'all' down && cd $SCRIPT_DIR${NOCOLOR}
 
 ${w}To stop the container without destroying it, type:
-${white}cd $container_dir && sudo docker stop${NOCOLOR}
+${white}cd $container_dir && sudo docker compose stop${NOCOLOR}
 
 ${w}To start the container after stopping it, type:
-${white}cd $container_dir && sudo docker start${NOCOLOR}
+${white}cd $container_dir && sudo docker dompose start${NOCOLOR}
 
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash${NOCOLOR}
