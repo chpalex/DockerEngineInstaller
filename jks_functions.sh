@@ -42,9 +42,16 @@ local jks_file="$1"
   # Extract the base name of the jks_file
   jks_file=$(basename "$jks_file")
 
+# Check if the jks_file variable contains the word "streamlock"
+if [[ "$jks_file" == *"streamlock"* ]]; then
+  jks_domain="${jks_file%.jks}"
+else
+  jks_domain=""
+fi
+
   # Capture the domain for the .jks file
   while true; do
-    jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 3>&1 1>&2 2>&3)
+    jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 "$jks_domain" 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ] && [ -n "$jks_domain" ]; then
       break
     else
