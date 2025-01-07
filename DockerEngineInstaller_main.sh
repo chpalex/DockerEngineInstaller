@@ -143,16 +143,16 @@ echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR${NOCOLOR}
 
 ${w}To stop the container without destroying it, type:
-${white}cd $container_dir && sudo docker compose stop${NOCOLOR}
+${white}cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR${NOCOLOR}
 
 ${w}To start the container after stopping it, type:
-${white}cd $container_dir && sudo docker dompose start${NOCOLOR}
+${white}cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR${NOCOLOR}
 
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash${NOCOLOR}
 "
 echo -e "${w}
-Check ${white}$container_dir${w} for Engine Logs and contents directories
+Check ${white}cd $container_dir${w} for Engine Logs and contents directories
 "
 if [ -n "$jks_domain" ]; then
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager"
