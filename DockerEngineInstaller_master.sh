@@ -275,6 +275,7 @@ create_docker_image() {
 FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
 
 RUN apt update && apt install -y nano
+WORKDIR /usr/local/WowzaStreamingEngine/
 
 # Create the tuning.sh script
 RUN echo '#!/bin/bash\n\
@@ -460,12 +461,18 @@ cat <<EOL > "$container_dir/.env"
 WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
+EngineDir=volume_for_${container_name}
 EOL
 
 }
 
 # Function to create docker-compose.yml and run docker compose up
 create_and_run_docker_compose() {
+  # Check if the volume exists, create it if it doesn't
+  volume_name="volume_for_${container_name}"
+  if ! docker volume ls --format '{{.Name}}' | grep -q "^${volume_name}$"; then
+    docker volume create "${volume_name}"
+  fi
 
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
@@ -481,9 +488,7 @@ services:
       - "554:554"
       - "8084-8090:8084-8090/tcp"
     volumes:
-      - $logs_dir:/usr/local/WowzaStreamingEngine/logs
-      - $content_dir:/usr/local/WowzaStreamingEngine/content
-      - $engine_conf_dir:/usr/local/WowzaStreamingEngine/conf
+      - ${volume_name}:/usr/local/WowzaStreamingEngine
 
     entrypoint: /sbin/entrypoint.sh
     env_file: 
