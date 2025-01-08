@@ -286,7 +286,7 @@ RUN apt install nano
 
 WORKDIR /usr/local/WowzaStreamingEngine/conf
 RUN nano tuning.sh; then 
-echo "#!/bin/bash
+RUN echo "#!/bin/bash
 
 engine_conf_dir=/usr/local/WowzaStreamingEngine/conf
 
@@ -534,6 +534,19 @@ cleanup() {
 
 rm -- "$0"
 }
+
+# Check if Docker is installed
+echo -e "${w}Checking if Docker is installed"
+if ! command -v docker &> /dev/null; then
+  install_docker
+else
+  echo -e "${w}Docker found"
+fi
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+  install_jq
+fi
 
 install_docker
 install_jq
