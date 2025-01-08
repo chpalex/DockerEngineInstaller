@@ -310,7 +310,7 @@ sed -i "/<\/ServerListeners>/i \\\n\
           </ServerListener>" "/usr/local/WowzaStreamingEngine/conf//Server.xml"\n\
 \n\
 # Find the line number of the closing </Properties> tag directly above the closing </Server> tag\n\
-line_number=$(awk "/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}" "/usr/local/WowzaStreamingEngine/conf//Server.xml")\n\
+line_number=$(awk "/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}" "/usr/local/WowzaStreamingEngine/conf/Server.xml")\n\
 \n\
 # Insert the new property at the found line number\n\
 if [ -n "$line_number" ]; then\n\
