@@ -202,13 +202,6 @@ httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}
 httpsKeyStorePassword=${jks_password}
 #httpsKeyAlias=[key-alias]
 EOL
-
-  # Copy the .jks file to the Engine conf directory
-  if [ -n "$jks_file" ] && [ -f "$upload/$jks_file" ]; then
-    cp "$upload/$jks_file" "$engine_conf_dir/$jks_file"
-  else
-    exit 1
-  fi
 }
 
 # Function to upload .jks file
@@ -336,6 +329,7 @@ EOL
   if [ -f "$upload/tomcat.properties" ]; then
     echo "COPY upload/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
+    echo "COPY upload/$jks_file /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
 
 # Change the <Port> line to have only 1935,554 ports
 echo "RUN sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
