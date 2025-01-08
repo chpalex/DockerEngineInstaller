@@ -267,17 +267,16 @@ upload_jks() {
 
 # Function to create Dockerfile and build Docker image for Wowza Engine
 create_docker_image() {
-  # Change directory to $DockerEngineInstaller
-  cd "$DockerEngineInstaller"
-  
-  # Create a Dockerfile
-  cat <<EOL > Dockerfile
+ # Change directory to $DockerEngineInstaller
+cd "$DockerEngineInstaller"
+
+# Create a Dockerfile
+cat <<EOL > Dockerfile
 FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
 
 RUN apt update && apt install -y nano
 WORKDIR /usr/local/WowzaStreamingEngine/
 
-# Create the tuning.sh script
 # Create the tuning.sh script
 RUN echo '#!/bin/bash
 
@@ -286,24 +285,24 @@ sed -i "s|<ReceiveBufferSize>.*</ReceiveBufferSize>|<ReceiveBufferSize>0</Receiv
 sed -i "s|<SendBufferSize>.*</SendBufferSize>|<SendBufferSize>0</SendBufferSize>|g" "/usr/local/WowzaStreamingEngine/conf/VHost.xml"
 
 # Check CPU thread count
-cpu_thread_count=$(nproc)
+cpu_thread_count=\$(nproc)
 
 # Calculate pool sizes with limits
-handler_pool_size=$((cpu_thread_count * 60))
-transport_pool_size=$((cpu_thread_count * 40))
+handler_pool_size=\$((cpu_thread_count * 60))
+transport_pool_size=\$((cpu_thread_count * 40))
 
 # Apply limits
-if [ "$handler_pool_size" -gt 4096 ]; then
+if [ "\$handler_pool_size" -gt 4096 ]; then
   handler_pool_size=4096
 fi
 
-if [ "$transport_pool_size" -gt 4096 ]; then
+if [ "\$transport_pool_size" -gt 4096 ]; then
   transport_pool_size=4096
 fi
 
 # Update Server.xml with new pool sizes
-sed -i "s|<HandlerThreadPool>.*</HandlerThreadPool>|<HandlerThreadPool><PoolSize>$handler_pool_size</PoolSize></HandlerThreadPool>|" "/usr/local/WowzaStreamingEngine/conf/Server.xml"
-sed -i "s|<TransportThreadPool>.*</TransportThreadPool>|<TransportThreadPool><PoolSize>$transport_pool_size</PoolSize></TransportThreadPool>|" "/usr/local/WowzaStreamingEngine/conf/Server.xml"
+sed -i "s|<HandlerThreadPool>.*</HandlerThreadPool>|<HandlerThreadPool><PoolSize>\$handler_pool_size</PoolSize></HandlerThreadPool>|" "/usr/local/WowzaStreamingEngine/conf/Server.xml"
+sed -i "s|<TransportThreadPool>.*</TransportThreadPool>|<TransportThreadPool><PoolSize>\$transport_pool_size</PoolSize></TransportThreadPool>|" "/usr/local/WowzaStreamingEngine/conf/Server.xml"
 
 # Configure Demo live stream
 sed -i "/<\/ServerListeners>/i \
@@ -312,11 +311,11 @@ sed -i "/<\/ServerListeners>/i \
           </ServerListener>" "/usr/local/WowzaStreamingEngine/conf/Server.xml"
 
 # Find the line number of the closing </Properties> tag directly above the closing </Server> tag
-line_number=$(sed -n '/<\/Properties>/=' "/usr/local/WowzaStreamingEngine/conf/Server.xml" | tail -1)
+line_number=\$(sed -n '/<\/Properties>/=' "/usr/local/WowzaStreamingEngine/conf/Server.xml" | tail -1)
 
 # Insert the new property at the found line number
-if [ -n "$line_number" ]; then
-  sed -i "${line_number}i <Property>\
+if [ -n "\$line_number" ]; then
+  sed -i "\${line_number}i <Property>\
 <Name>streamDemoPublisherConfig</Name>\
 <Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\
 <Type>String</Type>\
