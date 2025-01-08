@@ -311,7 +311,7 @@ sed -i "/<\/ServerListeners>/i \\\n\
           </ServerListener>" "/usr/local/WowzaStreamingEngine/conf/Server.xml"\n\
 \n\
 # Find the line number of the closing </Properties> tag directly above the closing </Server> tag\n\
-line_number=$(awk "/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}" "/usr/local/WowzaStreamingEngine/conf/Server.xml")\n\
+line_number=$(awk '/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}' "/usr/local/WowzaStreamingEngine/conf/Server.xml")\
 \n\
 # Insert the new property at the found line number\n\
 if [ -n "$line_number" ]; then\n\
@@ -489,7 +489,6 @@ services:
       - "8084-8090:8084-8090/tcp"
     volumes:
       - ${volume_name}:/usr/local/WowzaStreamingEngine
-
     entrypoint: /sbin/entrypoint.sh
     env_file: 
       - ./.env
@@ -499,7 +498,7 @@ services:
       - WSE_MGR_PASS=${wse_mgr_pass}
 volumes:
   ${volume_name}:
-    external: true      
+    driver: local      
 EOL
 
   # Run docker compose up
