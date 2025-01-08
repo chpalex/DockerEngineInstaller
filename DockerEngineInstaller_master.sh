@@ -394,10 +394,10 @@ EOL
 
     # Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
     echo "RUN sed -i '/<\/Manager>/i \\
-    <TestPlayer>\\
-        <IpAddress>${jks_domain}</IpAddress>\\
-        <Port>443</Port>\\
-        <SSLEnable>true</SSLEnable>\\
+    <TestPlayer>\n\
+        <IpAddress>${jks_domain}</IpAddress>\n\
+        <Port>443</Port>\n\
+        <SSLEnable>true</SSLEnable>\n\
     </TestPlayer>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
     # Edit the Server.xml file to include the JKS and password information
@@ -462,7 +462,6 @@ WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
 EOL
-
 }
 
 # Function to create docker-compose.yml and run docker compose up
