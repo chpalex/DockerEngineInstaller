@@ -328,7 +328,7 @@ RUN rm tuning.sh
 EOL
 
   if [ -f "$upload/tomcat.properties" ]; then
-    echo "COPY base_files/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
+    echo "COPY upload/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
 
 # Change the <Port> line to have only 1935,554 ports
