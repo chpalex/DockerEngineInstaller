@@ -328,83 +328,83 @@ EOL
 
   if [ -f "$upload/tomcat.properties" ]; then
     echo "COPY upload/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
-   # echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
+    echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
     echo "COPY upload/$jks_file /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
 
-# Change the <Port> line to have only 1935,554 ports
-echo "RUN sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
+    # Change the <Port> line to have only 1935,554 ports
+    echo "RUN sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
-# Edit the VHost.xml file to include the new HostPort block with the JKS and password information
-echo "RUN sed -i '/<\/HostPortList>/i \\
-  <HostPort>\\
-      <Name>Autoconfig SSL Streaming</Name>\\
-      <Type>Streaming</Type>\\
-      <ProcessorCount>\${com.wowza.wms.TuningAuto}</ProcessorCount>\\
-      <IpAddress>*</IpAddress>\\
-      <Port>443</Port>\\
-      <HTTPIdent2Response></HTTPIdent2Response>\\
-      <SSLConfig>\\
-          <KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>\\
-          <KeyStorePassword>${jks_password}</KeyStorePassword>\\
-          <KeyStoreType>JKS</KeyStoreType>\\
-          <DomainToKeyStoreMapPath></DomainToKeyStoreMapPath>\\
-          <SSLProtocol>TLS</SSLProtocol>\\
-          <Algorithm>SunX509</Algorithm>\\
-          <CipherSuites></CipherSuites>\\
-          <Protocols></Protocols>\\
-          <AllowHttp2>true</AllowHttp2>\\
-      </SSLConfig>\\
-      <SocketConfiguration>\\
-          <ReuseAddress>true</ReuseAddress>\\
-          <ReceiveBufferSize>65000</ReceiveBufferSize>\\
-          <ReadBufferSize>65000</ReceiveBufferSize>\\
-          <SendBufferSize>65000</SendBufferSize>\\
-          <KeepAlive>true</KeepAlive>\\
-          <AcceptorBackLog>100</AcceptorBackLog>\\
-      </SocketConfiguration>\\
-      <HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>\\
-      <HTTPProviders>\\
-          <HTTPProvider>\\
-              <BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>\\
-              <RequestFilters>*crossdomain.xml</RequestFilters>\\
-              <AuthenticationMethod>none</AuthenticationMethod>\\
-          </HTTPProvider>\\
-          <HTTPProvider>\\
-              <BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>\\
-              <RequestFilters>*clientaccesspolicy.xml</RequestFilters>\\
-              <AuthenticationMethod>none</AuthenticationMethod>\\
-          </HTTPProvider>\\
-          <HTTPProvider>\\
-              <BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>\\
-              <RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>\\
-              <AuthenticationMethod>none</AuthenticationMethod>\\
-          </HTTPProvider>\\
-          <HTTPProvider>\\
-              <BaseClass>com.wowza.wms.webrtc.http.HTTPWebRTCExchangeSessionInfo</BaseClass>\\
-              <RequestFilters>*webrtc-session.json</RequestFilters>\\
-              <AuthenticationMethod>none</AuthenticationMethod>\\
-          </HTTPProvider>\\
-          <HTTPProvider>\\
-              <BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>\\
-              <RequestFilters>*ServerVersion</RequestFilters>\\
-              <AuthenticationMethod>none</AuthenticationMethod>\\
-          </HTTPProvider>\\
-      </HTTPProviders>\\
-  </HostPort>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
+    # Edit the VHost.xml file to include the new HostPort block with the JKS and password information
+    echo "RUN sed -i '/<\/HostPortList>/i \\
+    <HostPort>\\
+        <Name>Autoconfig SSL Streaming</Name>\\
+        <Type>Streaming</Type>\\
+        <ProcessorCount>\${com.wowza.wms.TuningAuto}</ProcessorCount>\\
+        <IpAddress>*</IpAddress>\\
+        <Port>443</Port>\\
+        <HTTPIdent2Response></HTTPIdent2Response>\\
+        <SSLConfig>\\
+            <KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>\\
+            <KeyStorePassword>${jks_password}</KeyStorePassword>\\
+            <KeyStoreType>JKS</KeyStoreType>\\
+            <DomainToKeyStoreMapPath></DomainToKeyStoreMapPath>\\
+            <SSLProtocol>TLS</SSLProtocol>\\
+            <Algorithm>SunX509</Algorithm>\\
+            <CipherSuites></CipherSuites>\\
+            <Protocols></Protocols>\\
+            <AllowHttp2>true</AllowHttp2>\\
+        </SSLConfig>\\
+        <SocketConfiguration>\\
+            <ReuseAddress>true</ReuseAddress>\\
+            <ReceiveBufferSize>65000</ReceiveBufferSize>\\
+            <ReadBufferSize>65000</ReceiveBufferSize>\\
+            <SendBufferSize>65000</SendBufferSize>\\
+            <KeepAlive>true</KeepAlive>\\
+            <AcceptorBackLog>100</AcceptorBackLog>\\
+        </SocketConfiguration>\\
+        <HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>\\
+        <HTTPProviders>\\
+            <HTTPProvider>\\
+                <BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>\\
+                <RequestFilters>*crossdomain.xml</RequestFilters>\\
+                <AuthenticationMethod>none</AuthenticationMethod>\\
+            </HTTPProvider>\\
+            <HTTPProvider>\\
+                <BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>\\
+                <RequestFilters>*clientaccesspolicy.xml</RequestFilters>\\
+                <AuthenticationMethod>none</AuthenticationMethod>\\
+            </HTTPProvider>\\
+            <HTTPProvider>\\
+                <BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>\\
+                <RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>\\
+                <AuthenticationMethod>none</AuthenticationMethod>\\
+            </HTTPProvider>\\
+            <HTTPProvider>\\
+                <BaseClass>com.wowza.wms.webrtc.http.HTTPWebRTCExchangeSessionInfo</BaseClass>\\
+                <RequestFilters>*webrtc-session.json</RequestFilters>\\
+                <AuthenticationMethod>none</AuthenticationMethod>\\
+            </HTTPProvider>\\
+            <HTTPProvider>\\
+                <BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>\\
+                <RequestFilters>*ServerVersion</RequestFilters>\\
+                <AuthenticationMethod>none</AuthenticationMethod>\\
+            </HTTPProvider>\\
+        </HTTPProviders>\\
+    </HostPort>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
-# Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
-echo "RUN sed -i '/<\/Manager>/i \\
-  <TestPlayer>\\
-      <IpAddress>${jks_domain}</IpAddress>\\
-      <Port>443</Port>\\
-      <SSLEnable>true</SSLEnable>\\
-  </TestPlayer>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
+    # Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
+    echo "RUN sed -i '/<\/Manager>/i \\
+    <TestPlayer>\\
+        <IpAddress>${jks_domain}</IpAddress>\\
+        <Port>443</Port>\\
+        <SSLEnable>true</SSLEnable>\\
+    </TestPlayer>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
-# Edit the Server.xml file to include the JKS and password information
-echo "RUN sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
-echo "RUN sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
-echo "RUN sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>${jks_password}</KeyStorePassword>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
-echo "RUN sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+    # Edit the Server.xml file to include the JKS and password information
+    echo "RUN sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+    echo "RUN sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+    echo "RUN sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>${jks_password}</KeyStorePassword>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+    echo "RUN sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
   fi
   
   # Build the Docker image from specified version
@@ -492,9 +492,9 @@ services:
     env_file: 
       - ./.env
     environment:
-      - WSE_LIC=${wse_lic}
-      - WSE_MGR_USER=${wse_mgr_user}
-      - WSE_MGR_PASS=${wse_mgr_pass}
+      - WSE_LIC=${WSE_LIC}
+      - WSE_MGR_USER=${WSE_MGR_USER}
+      - WSE_MGR_PASS=${WSE_MGR_PASS}
 volumes:
   ${volume_name}:
     external: true      
@@ -557,6 +557,8 @@ create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
 cleanup
+
+sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
