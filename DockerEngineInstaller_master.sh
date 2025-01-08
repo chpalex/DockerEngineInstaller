@@ -340,8 +340,7 @@ EOL
   if [ -f "$upload/tomcat.properties" ]; then
     echo "COPY base_files/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
-    echo "RUN 
-      # Change the <Port> line to have only 1935,554 ports
+    echo "RUN echo " # Change the <Port> line to have only 1935,554 ports
   sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' "$engine_conf_dir/VHost.xml"
 
   # Edit the VHost.xml file to include the new HostPort block with the JKS and password information
@@ -414,7 +413,7 @@ EOL
   sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>|' "$engine_conf_dir/Server.xml"
   sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$engine_conf_dir/Server.xml"
-  sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml" " >> Dockerfile
+  sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml" " " >> Dockerfile
 
   fi
   
@@ -547,9 +546,6 @@ fi
 if ! command -v jq &> /dev/null; then
   install_jq
 fi
-
-install_docker
-install_jq
 
 # Define the Container directory
 container_dir="$BUILD_DIR/$container_name"
