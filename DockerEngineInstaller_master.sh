@@ -356,9 +356,9 @@ EOL
         </SSLConfig>\n\  
         <SocketConfiguration>\n\  
             <ReuseAddress>true</ReuseAddress>\n\  
-            <ReceiveBufferSize>65000</ReceiveBufferSize>\n\  
+            <ReceiveBufferSize>0</ReceiveBufferSize>\n\  
             <ReadBufferSize>65000</ReadBufferSize>\n\  
-            <SendBufferSize>65000</SendBufferSize>\n\  
+            <SendBufferSize>0</SendBufferSize>\n\  
             <KeepAlive>true</KeepAlive>\n\  
             <AcceptorBackLog>100</AcceptorBackLog>\n\  
         </SocketConfiguration>\n\  
