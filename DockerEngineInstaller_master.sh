@@ -278,7 +278,8 @@ RUN apt update && apt install -y nano
 WORKDIR /usr/local/WowzaStreamingEngine/
 
 # Create the tuning.sh script
-RUN echo '#!/bin/bash
+RUN cat <<'EOF' > tuning.sh
+#!/bin/bash
 
 # Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>
 sed -i "s|<ReceiveBufferSize>.*</ReceiveBufferSize>|<ReceiveBufferSize>0</ReceiveBufferSize>|g" "/usr/local/WowzaStreamingEngine/conf/VHost.xml"
@@ -323,7 +324,8 @@ if [ -n "\$line_number" ]; then
 fi
 
 # Edit log4j2-config.xml to comment out serverError appender
-sed -i "s|<AppenderRef ref=\"serverError\" level=\"warn\"/>|<!-- <AppenderRef ref=\"serverError\" level=\"warn\"/> -->|g" "/usr/local/WowzaStreamingEngine/conf/log4j2-config.xml"' > tuning.sh
+sed -i "s|<AppenderRef ref=\"serverError\" level=\"warn\"/>|<!-- <AppenderRef ref=\"serverError\" level=\"warn\"/> -->|g" "/usr/local/WowzaStreamingEngine/conf/log4j2-config.xml"
+EOF
 
 RUN chmod +x tuning.sh
 RUN ./tuning.sh
