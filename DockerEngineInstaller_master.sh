@@ -95,13 +95,6 @@ fetch_and_set_wowza_versions() {
   # Use whiptail to create a menu for selecting the version
   engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 80 $list_height "${version_list[@]}" 3>&1 1>&2 2>&3)
 
-  # Check if the user selected a version
-  if [ $? -eq 0 ]; then
-    echo "$engine_version"
-  else
-    return 1
-  fi
-
   # Prompt for Docker container name
   container_name=$(whiptail --inputbox "Enter the name for this WSE install (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$container_name" ]; then
@@ -274,62 +267,59 @@ upload_jks() {
 
 # Function to create Dockerfile and build Docker image for Wowza Engine
 create_docker_image() {
-  # Change directory to $BUILD_DIR/
+  # Change directory to $DockerEngineInstaller
   cd "$DockerEngineInstaller"
 
   # Create a Dockerfile
   cat <<EOL > Dockerfile
 FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
 
-RUN apt update
-RUN apt install nano
+RUN apt update && apt install -y nano
 
-WORKDIR /usr/local/WowzaStreamingEngine/conf
-RUN nano tuning.sh; then 
-RUN echo "#!/bin/bash
-
-engine_conf_dir=/usr/local/WowzaStreamingEngine/conf
-
-# Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>
-sed -i 's|<ReceiveBufferSize>.*</ReceiveBufferSize>|<ReceiveBufferSize>0</ReceiveBufferSize>|g' "$engine_conf_dir/VHost.xml"
-sed -i 's|<SendBufferSize>.*</SendBufferSize>|<SendBufferSize>0</SendBufferSize>|g' "$engine_conf_dir/VHost.xml"
-
-# Check CPU thread count
-cpu_thread_count=$(nproc)
-
-# Calculate pool sizes with limits
-handler_pool_size=$((cpu_thread_count * 60))
-transport_pool_size=$((cpu_thread_count * 40))
-
-# Apply limits
-if [ "$handler_pool_size" -gt 4096 ]; then
-  handler_pool_size=4096
-fi
-
-if [ "$transport_pool_size" -gt 4096 ]; then
-  transport_pool_size=4096
-fi
-
-# Update Server.xml with new pool sizes
-sed -i 's|<HandlerThreadPool>.*</HandlerThreadPool>|<HandlerThreadPool><PoolSize>'"$handler_pool_size"'</PoolSize></HandlerThreadPool>|' "$engine_conf_dir/Server.xml"
-sed -i 's|<TransportThreadPool>.*</TransportThreadPool>|<TransportThreadPool><PoolSize>'"$transport_pool_size"'</PoolSize></TransportThreadPool>|' "$engine_conf_dir/Server.xml"
-
-# Configure Demo live stream
-sed -i '/<\/ServerListeners>/i \
-          <ServerListener>\
-            <BaseClass>com.wowza.wms.module.ServerListenerStreamDemoPublisher</BaseClass>\
-          </ServerListener>' "$engine_conf_dir/Server.xml"
-  
-# Find the line number of the closing </Properties> tag directly above the closing </Server> tag
-line_number=$(awk '/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}' "$engine_conf_dir/Server.xml")
-
-# Insert the new property at the found line number
-if [ -n "$line_number" ]; then
-  sed -i "${line_number}i <Property>\n<Name>streamDemoPublisherConfig</Name>\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\n\<Type>String</Type>\n</Property>" "$engine_conf_dir/Server.xml"
-fi
-
-# Edit log4j2-config.xml to comment out serverError appender
-sed -i 's|<AppenderRef ref="serverError" level="warn"/>|<!-- <AppenderRef ref="serverError" level="warn"/> -->|g' "$engine_conf_dir/log4j2-config.xml" " >> tuning.sh
+# Create the tuning.sh script
+RUN echo '#!/bin/bash\n\
+engine_conf_dir=/usr/local/WowzaStreamingEngine/conf\n\
+\n\
+# Change ReceiveBufferSize and SendBufferSize values to 0 for <NetConnections> and <MediaCasters>\n\
+sed -i "s|<ReceiveBufferSize>.*</ReceiveBufferSize>|<ReceiveBufferSize>0</ReceiveBufferSize>|g" "$engine_conf_dir/VHost.xml"\n\
+sed -i "s|<SendBufferSize>.*</SendBufferSize>|<SendBufferSize>0</SendBufferSize>|g" "$engine_conf_dir/VHost.xml"\n\
+\n\
+# Check CPU thread count\n\
+cpu_thread_count=$(nproc)\n\
+\n\
+# Calculate pool sizes with limits\n\
+handler_pool_size=$((cpu_thread_count * 60))\n\
+transport_pool_size=$((cpu_thread_count * 40))\n\
+\n\
+# Apply limits\n\
+if [ "$handler_pool_size" -gt 4096 ]; then\n\
+  handler_pool_size=4096\n\
+fi\n\
+\n\
+if [ "$transport_pool_size" -gt 4096 ]; then\n\
+  transport_pool_size=4096\n\
+fi\n\
+\n\
+# Update Server.xml with new pool sizes\n\
+sed -i "s|<HandlerThreadPool>.*</HandlerThreadPool>|<HandlerThreadPool><PoolSize>$handler_pool_size</PoolSize></HandlerThreadPool>|" "$engine_conf_dir/Server.xml"\n\
+sed -i "s|<TransportThreadPool>.*</TransportThreadPool>|<TransportThreadPool><PoolSize>$transport_pool_size</PoolSize></TransportThreadPool>|" "$engine_conf_dir/Server.xml"\n\
+\n\
+# Configure Demo live stream\n\
+sed -i "/<\/ServerListeners>/i \\\n\
+          <ServerListener>\\\n\
+            <BaseClass>com.wowza.wms.module.ServerListenerStreamDemoPublisher</BaseClass>\\\n\
+          </ServerListener>" "$engine_conf_dir/Server.xml"\n\
+\n\
+# Find the line number of the closing </Properties> tag directly above the closing </Server> tag\n\
+line_number=$(awk "/<\/Properties>/ {p=NR} /<\/Server>/ && p {print p; exit}" "$engine_conf_dir/Server.xml")\n\
+\n\
+# Insert the new property at the found line number\n\
+if [ -n "$line_number" ]; then\n\
+  sed -i "${line_number}i <Property>\\n<Name>streamDemoPublisherConfig</Name>\\n<Value>appName=live,srcStream=sample.mp4,dstStream=myStream,sendOnMetadata=true</Value>\\n<Type>String</Type>\\n</Property>" "$engine_conf_dir/Server.xml"\n\
+fi\n\
+\n\
+# Edit log4j2-config.xml to comment out serverError appender\n\
+sed -i "s|<AppenderRef ref=\"serverError\" level=\"warn\"/>|<!-- <AppenderRef ref=\"serverError\" level=\"warn\"/> -->|g" "$engine_conf_dir/log4j2-config.xml"\n' > tuning.sh
 
 RUN chmod +x tuning.sh
 RUN ./tuning.sh
@@ -340,81 +330,81 @@ EOL
   if [ -f "$upload/tomcat.properties" ]; then
     echo "COPY base_files/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
-    echo "RUN echo " # Change the <Port> line to have only 1935,554 ports
-  sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' "$engine_conf_dir/VHost.xml"
 
-  # Edit the VHost.xml file to include the new HostPort block with the JKS and password information
-  sed -i '/<\/HostPortList>/i \
-  <HostPort>\
-      <Name>Autoconfig SSL Streaming</Name>\
-      <Type>Streaming</Type>\
-      <ProcessorCount>\${com.wowza.wms.TuningAuto}</ProcessorCount>\
-      <IpAddress>*</IpAddress>\
-      <Port>443</Port>\
-      <HTTPIdent2Response></HTTPIdent2Response>\
-      <SSLConfig>\
-          <KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>\
-          <KeyStorePassword>'${jks_password}'</KeyStorePassword>\
-          <KeyStoreType>JKS</KeyStoreType>\
-          <DomainToKeyStoreMapPath></DomainToKeyStoreMapPath>\
-          <SSLProtocol>TLS</SSLProtocol>\
-          <Algorithm>SunX509</Algorithm>\
-          <CipherSuites></CipherSuites>\
-          <Protocols></Protocols>\
-          <AllowHttp2>true</AllowHttp2>\
-      </SSLConfig>\
-      <SocketConfiguration>\
-          <ReuseAddress>true</ReuseAddress>\
-          <ReceiveBufferSize>65000</ReceiveBufferSize>\
-          <ReadBufferSize>65000</ReadBufferSize>\
-          <SendBufferSize>65000</SendBufferSize>\
-          <KeepAlive>true</KeepAlive>\
-          <AcceptorBackLog>100</AcceptorBackLog>\
-      </SocketConfiguration>\
-      <HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>\
-      <HTTPProviders>\
-          <HTTPProvider>\
-              <BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>\
-              <RequestFilters>*crossdomain.xml</RequestFilters>\
-              <AuthenticationMethod>none</AuthenticationMethod>\
-          </HTTPProvider>\
-          <HTTPProvider>\
-              <BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>\
-              <RequestFilters>*clientaccesspolicy.xml</RequestFilters>\
-              <AuthenticationMethod>none</AuthenticationMethod>\
-          </HTTPProvider>\
-          <HTTPProvider>\
-              <BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>\
-              <RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>\
-              <AuthenticationMethod>none</AuthenticationMethod>\
-          </HTTPProvider>\
-          <HTTPProvider>\
-              <BaseClass>com.wowza.wms.webrtc.http.HTTPWebRTCExchangeSessionInfo</BaseClass>\
-              <RequestFilters>*webrtc-session.json</RequestFilters>\
-              <AuthenticationMethod>none</AuthenticationMethod>\
-          </HTTPProvider>\
-          <HTTPProvider>\
-              <BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>\
-              <RequestFilters>*ServerVersion</RequestFilters>\
-              <AuthenticationMethod>none</AuthenticationMethod>\
-          </HTTPProvider>\
-      </HTTPProviders>\
-  </HostPort>' "$engine_conf_dir/VHost.xml"
+# Change the <Port> line to have only 1935,554 ports
+echo "RUN sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
-  # Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
-  sed -i '/<\/Manager>/i \
-  <TestPlayer>\
-      <IpAddress>'${jks_domain}'</IpAddress>\
-      <Port>443</Port>\
-      <SSLEnable>true</SSLEnable>\
-  </TestPlayer>' "$engine_conf_dir/VHost.xml"
+# Edit the VHost.xml file to include the new HostPort block with the JKS and password information
+echo "RUN sed -i '/<\/HostPortList>/i \\
+  <HostPort>\\
+      <Name>Autoconfig SSL Streaming</Name>\\
+      <Type>Streaming</Type>\\
+      <ProcessorCount>\${com.wowza.wms.TuningAuto}</ProcessorCount>\\
+      <IpAddress>*</IpAddress>\\
+      <Port>443</Port>\\
+      <HTTPIdent2Response></HTTPIdent2Response>\\
+      <SSLConfig>\\
+          <KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>\\
+          <KeyStorePassword>${jks_password}</KeyStorePassword>\\
+          <KeyStoreType>JKS</KeyStoreType>\\
+          <DomainToKeyStoreMapPath></DomainToKeyStoreMapPath>\\
+          <SSLProtocol>TLS</SSLProtocol>\\
+          <Algorithm>SunX509</Algorithm>\\
+          <CipherSuites></CipherSuites>\\
+          <Protocols></Protocols>\\
+          <AllowHttp2>true</AllowHttp2>\\
+      </SSLConfig>\\
+      <SocketConfiguration>\\
+          <ReuseAddress>true</ReuseAddress>\\
+          <ReceiveBufferSize>65000</ReceiveBufferSize>\\
+          <ReadBufferSize>65000</ReceiveBufferSize>\\
+          <SendBufferSize>65000</SendBufferSize>\\
+          <KeepAlive>true</KeepAlive>\\
+          <AcceptorBackLog>100</AcceptorBackLog>\\
+      </SocketConfiguration>\\
+      <HTTPStreamerAdapterIDs>cupertinostreaming,smoothstreaming,sanjosestreaming,dvrchunkstreaming,mpegdashstreaming</HTTPStreamerAdapterIDs>\\
+      <HTTPProviders>\\
+          <HTTPProvider>\\
+              <BaseClass>com.wowza.wms.http.HTTPCrossdomain</BaseClass>\\
+              <RequestFilters>*crossdomain.xml</RequestFilters>\\
+              <AuthenticationMethod>none</AuthenticationMethod>\\
+          </HTTPProvider>\\
+          <HTTPProvider>\\
+              <BaseClass>com.wowza.wms.http.HTTPClientAccessPolicy</BaseClass>\\
+              <RequestFilters>*clientaccesspolicy.xml</RequestFilters>\\
+              <AuthenticationMethod>none</AuthenticationMethod>\\
+          </HTTPProvider>\\
+          <HTTPProvider>\\
+              <BaseClass>com.wowza.wms.http.HTTPProviderMediaList</BaseClass>\\
+              <RequestFilters>*jwplayer.rss|*jwplayer.smil|*medialist.smil|*manifest-rtmp.f4m</RequestFilters>\\
+              <AuthenticationMethod>none</AuthenticationMethod>\\
+          </HTTPProvider>\\
+          <HTTPProvider>\\
+              <BaseClass>com.wowza.wms.webrtc.http.HTTPWebRTCExchangeSessionInfo</BaseClass>\\
+              <RequestFilters>*webrtc-session.json</RequestFilters>\\
+              <AuthenticationMethod>none</AuthenticationMethod>\\
+          </HTTPProvider>\\
+          <HTTPProvider>\\
+              <BaseClass>com.wowza.wms.http.HTTPServerVersion</BaseClass>\\
+              <RequestFilters>*ServerVersion</RequestFilters>\\
+              <AuthenticationMethod>none</AuthenticationMethod>\\
+          </HTTPProvider>\\
+      </HTTPProviders>\\
+  </HostPort>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
-  # Edit the Server.xml file to include the JKS and password information
-  sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' "$engine_conf_dir/Server.xml"
-  sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/'${jks_file}'</KeyStorePath>|' "$engine_conf_dir/Server.xml"
-  sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>'${jks_password}'</KeyStorePassword>|' "$engine_conf_dir/Server.xml"
-  sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' "$engine_conf_dir/Server.xml" " " >> Dockerfile
+# Edit the VHost.xml file to include the new TestPlayer block with the jks_domain
+echo "RUN sed -i '/<\/Manager>/i \\
+  <TestPlayer>\\
+      <IpAddress>${jks_domain}</IpAddress>\\
+      <Port>443</Port>\\
+      <SSLEnable>true</SSLEnable>\\
+  </TestPlayer>' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
 
+# Edit the Server.xml file to include the JKS and password information
+echo "RUN sed -i 's|<Enable>false</Enable>|<Enable>true</Enable>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+echo "RUN sed -i 's|<KeyStorePath></KeyStorePath>|<KeyStorePath>/usr/local/WowzaStreamingEngine/conf/${jks_file}</KeyStorePath>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+echo "RUN sed -i 's|<KeyStorePassword></KeyStorePassword>|<KeyStorePassword>${jks_password}</KeyStorePassword>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
+echo "RUN sed -i 's|<IPWhiteList>127.0.0.1</IPWhiteList>|<IPWhiteList>*</IPWhiteList>|' /usr/local/WowzaStreamingEngine/conf/Server.xml" >> Dockerfile
   fi
   
   # Build the Docker image from specified version
