@@ -497,6 +497,9 @@ services:
       - WSE_LIC=${wse_lic}
       - WSE_MGR_USER=${wse_mgr_user}
       - WSE_MGR_PASS=${wse_mgr_pass}
+volumes:
+  ${volume_name}:
+    external: true      
 EOL
 
   # Run docker compose up
