@@ -461,7 +461,6 @@ cat <<EOL > "$container_dir/.env"
 WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
-EngineDir=volume_for_${container_name}
 EOL
 
 }
@@ -526,8 +525,6 @@ cleanup() {
   if [ -f "$upload/tomcat.properties" ]; then
     sudo rm "$upload/tomcat.properties"
   fi
-
-rm -- "$0"
 }
 
 # Check if Docker is installed
@@ -547,7 +544,7 @@ fi
 container_dir="$BUILD_DIR/$container_name"
 mkdir -p "$container_dir"
 engine_conf_dir="$container_dir/Engine_conf"
-mkdir -p -m 777 "$engine_conf_dir"
+mkdir -p "$engine_conf_dir"
 
 fetch_and_set_wowza_versions
 if [ $? -ne 0 ]; then
@@ -558,16 +555,6 @@ fi
 check_for_jks # runs upload_jks, ssl_config
 create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
-
-# Define volume directories
-logs_dir="$container_dir/Engine_logs"
-content_dir="$container_dir/Engine_content"
-engine_conf_dir="$container_dir/Engine_conf"
-
-# Create volume directories
-mkdir -p -m 777 "$logs_dir"
-mkdir -p -m 777 "$content_dir"
-
 create_and_run_docker_compose
 cleanup
 
@@ -600,4 +587,4 @@ else
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: ${w}http://$private_ip:8088/enginemanager${NOCOLOR}"
 fi
 
-rm -- "$0"
+rm $SCRIPT_DIR/DockerEngineInstaller.sh
