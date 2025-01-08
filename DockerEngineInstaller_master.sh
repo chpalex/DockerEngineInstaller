@@ -497,7 +497,7 @@ services:
       - WSE_MGR_PASS=${wse_mgr_pass}
 volumes:
   ${volume_name}:
-    driver: local      
+    external: true      
 EOL
 
   # Run docker compose up
