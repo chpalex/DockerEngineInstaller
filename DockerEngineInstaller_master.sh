@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Debug
-# set -e
-# set -x
+set -e
+set -x
 
 #Set colors to Wowza colors
 w='\033[38;5;208m'
