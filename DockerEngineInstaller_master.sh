@@ -471,7 +471,7 @@ create_and_run_docker_compose() {
   fi
 
   # Create docker-compose.yml
-  cat <<EOL > "$container_dir/docker-compose.yml"
+  cat <<EOL > "$container_dir/docker-compose.yaml"
 services:
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
@@ -557,11 +557,25 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
 
-# Get the public IP address
-public_ip=$(curl -s ifconfig.me)
+# Add after symlinks creation
+whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
+- Engine install directory is mapped to a persistent volume on host OS
+- Volume persists between container reinstalls of the same name
+- $container_dir contains links to: conf, logs, transcoder, manager, content, lib
 
-# Get the private IP address
-private_ip=$(ip route get 1 | awk '{print $7;exit}')
+File Management:
+1. Edit files directly:
+   sudo nano Engine_xxxx/[file_name]
+
+2. Copy files out:
+   sudo cp Engine_xxxx/[file_name] [file_name]
+
+3. Copy files back:
+   sudo cp [file_name] Engine_xxxx/[file_name]
+
+NOTE: Container must be restarted for changes to take effect:
+  cd $container_dir && sudo docker compose stop
+  cd $container_dir && sudo docker compose start" 20 78
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
@@ -572,13 +586,21 @@ ${white}cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR${NOCOLOR
 
 ${w}To start the container after stopping it, type:
 ${white}cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR${NOCOLOR}
-
+"
+echo -e "
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash${NOCOLOR}
 "
 echo -e "${w}
-Check ${white}cd $container_dir${w} for Engine Logs and contents directories
+Check ${white}cd $container_dir${w} for Engine conf, logs, manager, transcoder, lib and contents directories
 "
+# Get the public IP address
+public_ip=$(curl -s ifconfig.me)
+
+# Get the private IP address
+private_ip=$(ip route get 1 | awk '{print $7;exit}')
+
+# Print instructions on how to connect to Wowza Streaming Engine Manager
 if [ -n "$jks_domain" ]; then
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager"
 else
