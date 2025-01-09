@@ -575,7 +575,7 @@ File Management:
 
 NOTE: Container must be restarted for changes to take effect:
   cd $container_dir && sudo docker compose stop
-  cd $container_dir && sudo docker compose start" 20 78
+  cd $container_dir && sudo docker compose start" 30 78
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
@@ -592,7 +592,24 @@ ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash${NOCOLOR}
 "
 echo -e "${w}
-Check ${white}cd $container_dir${w} for Engine conf, logs, manager, transcoder, lib and contents directories
+* Engine install directory is mapped to a persistent volume on host OS
+* Volume persists between container reinstalls of the same name
+* $container_dir contains links to: conf, logs, transcoder, manager, lib
+
+File Management:
+1. Edit files directly:
+   sudo nano Engine_xxxx/[file_name]
+
+2. Copy files out:
+   sudo cp Engine_xxxx/[file_name] [file_name]
+
+3. Copy files back:
+   sudo cp [file_name] Engine_xxxx/[file_name]
+
+NOTE: Container must be restarted for changes to take effect:
+   cd $container_dir
+   sudo docker compose stop
+   sudo docker compose start
 "
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
