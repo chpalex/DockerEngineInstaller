@@ -575,7 +575,7 @@ File Management:
 
 NOTE: Container must be restarted for changes to take effect:
   cd $container_dir && sudo docker compose stop
-  cd $container_dir && sudo docker compose start" 30 78
+  cd $container_dir && sudo docker compose start" 30 100
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
