@@ -594,7 +594,7 @@ ${white}sudo docker exec -it $container_name bash
 echo -e "${w}
 * Engine install directory is mapped to a persistent volume on host OS
 * Volume persists between container reinstalls of the same name
-* $container_dir contains links to: ${NOCOLOR}conf, logs, transcoder, manager, lib
+* $container_dir contains links to: ${NOCOLOR}conf, logs, transcoder, manager, content, lib
 
 ${w}File Management:
 1. Edit files directly:
