@@ -101,11 +101,9 @@ fetch_and_set_wowza_versions() {
     container_name="wse_${engine_version}"
   fi
 
-  # Define the Container directory
+  # Define the Container directory and Engine conf directory
   container_dir="$DockerEngineInstaller/$container_name"
   mkdir -p "$container_dir"
-  engine_conf_dir="$container_dir/Engine_conf"
-  mkdir -p -m 777 "$engine_conf_dir"
 }
 
 # Function to scan for .jks file
@@ -539,12 +537,6 @@ if ! command -v jq &> /dev/null; then
   install_jq
 fi
 
-# Define the Container directory
-container_dir="$BUILD_DIR/$container_name"
-mkdir -p "$container_dir"
-engine_conf_dir="$container_dir/Engine_conf"
-mkdir -p "$engine_conf_dir"
-
 fetch_and_set_wowza_versions
 if [ $? -ne 0 ]; then
   echo -e "${w}Installation cancelled by user."
@@ -558,6 +550,12 @@ create_and_run_docker_compose
 cleanup
 
 sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/logs/ $container_dir/Engine_logs
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/content/ $container_dir/Engine_content
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/ $container_dir/Engine_transcoder
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
+sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
 
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
