@@ -267,6 +267,57 @@ FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
 
 RUN apt update && apt install -y nano
 WORKDIR /usr/local/WowzaStreamingEngine/
+RUN cat <<'EOF' > entrypoint.sh
+#!/bin/bash
+
+WMSAPP_HOME="$( readlink /usr/local/WowzaStreamingEngine )"
+
+if [ -z $WSE_MGR_USER ]; then
+	mgrUser="wowza"
+else
+	mgrUser=$WSE_MGR_USER
+fi
+if [ -z $WSE_MGR_PASS ]; then
+	mgrPass="wowza"
+else
+	mgrPass=$WSE_MGR_PASS
+fi
+
+if [ ! -z $WSE_LIC ]; then
+cat > ${WMSAPP_HOME}/conf/Server.license <<EOF
+-----BEGIN LICENSE-----
+${WSE_LIC}
+-----END LICENSE-----
+EOF
+fi
+
+# Check if admin.password file exists and add user if not
+if [ ! -f \"\${WMSAPP_HOME}/conf/admin.password\" ] || ! grep -q \"^\${mgrUser}\" \"\${WMSAPP_HOME}/conf/admin.password\"; then
+echo -e "\n$mgrUser $mgrPass admin|advUser\n" >> ${WMSAPP_HOME}/conf/admin.password
+echo -e "\n$mgrUser $mgrPass\n" >> ${WMSAPP_HOME}/conf/publish.password
+echo -e "\n$mgrUser $mgrPass\n" >> ${WMSAPP_HOME}/conf/jmxremote.password
+#echo -e "$mgrUser readwrite\n" >> ${WMSAPP_HOME}/conf/jmxremote.access
+fi
+
+if [[ ! -z $WSE_IP_PARAM ]]; then
+	#change localhost to some user defined IP
+	cat "${WMSAPP_HOME}/conf/Server.xml" > serverTmp
+	sed 's|\(<IpAddress>localhost</IpAddress>\)|<IpAddress>'"$WSE_IP_PARAM"'</IpAddress> <!--changed for default install. \1-->|' <serverTmp >Server.xml
+	sed 's|\(<RMIServerHostName>localhost</RMIServerHostName>\)|<RMIServerHostName>'"$WSE_IP_PARAM"'</RMIServerHostName> <!--changed for default install. \1-->|' <Server.xml >serverTmp
+	cat serverTmp > ${WMSAPP_HOME}/conf/Server.xml
+	rm serverTmp Server.xml
+	
+	cat "${WMSAPP_HOME}/conf/VHost.xml" > vhostTmp
+	sed 's|\(<IpAddress>${com.wowza.wms.HostPort.IpAddress}</IpAddress>\)|<IpAddress>'"$WSE_IP_PARAM"'</IpAddress> <!--changed for default cloud install. \1-->|' <vhostTmp >${WMSAPP_HOME}/conf/VHost.xml 
+	rm vhostTmp
+fi
+
+# Make supervisor log files configurable
+#sed 's|^logfile=.*|logfile='"${SUPERVISOR_LOG_HOME}"'/supervisor/supervisord.log ;|' -i /etc/supervisor/supervisord.conf
+
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
+EOF
+RUN chmod +x /sbin/entrypoint.sh
 
 # Create the tuning.sh script
 RUN cat <<'EOF' > tuning.sh
@@ -558,42 +609,6 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/content/ $c
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/ $container_dir/Engine_transcoder
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
-
-# Bug fix for Docker 
-# Edit /sbin/entrypoint.sh to fix repeated user issue
-# sudo docker exec -it $container_name bash
-# sed -i '/echo -e "\\n$mgrUser $mgrPass admin|advUser\\n"/i if [ ! -f "${WMSAPP_HOME}/conf/admin.password" ] || ! grep -q "^${mgrUser}" "${WMSAPP_HOME}/conf/admin.password"; then' /sbin/entrypoint.sh
-# sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
-# exit
-
-# Replace existing docker exec command with debug version
-sudo docker exec $container_name /bin/bash -c '
-    echo "=== Starting entrypoint.sh modification ==="
-    echo "Current permissions:"
-    ls -l /sbin/entrypoint.sh
-    
-    echo "=== Original content ==="
-    cat /sbin/entrypoint.sh
-    
-    echo "=== Applying changes ==="
-    sed -i "/echo -e \"\\n\$mgrUser \$mgrPass admin|advUser\\n\"/i if [ ! -f \"\${WMSAPP_HOME}/conf/admin.password\" ] || ! grep -q \"^\${mgrUser}\" \"\${WMSAPP_HOME}/conf/admin.password\"; then" /sbin/entrypoint.sh
-    if [ $? -ne 0 ]; then
-        echo "First sed command failed"
-        exit 1
-    fi
-    
-    sed -i "/#echo -e \"\$mgrUser readwrite\\n\"/a fi" /sbin/entrypoint.sh
-    if [ $? -ne 0 ]; then
-        echo "Second sed command failed"
-        exit 1
-    fi
-    
-    echo "=== Modified content ==="
-    cat /sbin/entrypoint.sh
-    
-    echo "=== Verifying changes ==="
-    grep -A 5 -B 5 "if \[ ! -f" /sbin/entrypoint.sh
-'
 
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
