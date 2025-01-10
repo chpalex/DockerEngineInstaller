@@ -316,6 +316,11 @@ fi
 
 # Edit log4j2-config.xml to comment out serverError appender
 sed -i "s|<AppenderRef ref=\"serverError\" level=\"warn\"/>|<!-- <AppenderRef ref=\"serverError\" level=\"warn\"/> -->|g" "/usr/local/WowzaStreamingEngine/conf/log4j2-config.xml"
+
+# Edit /sbin/entrypoint.sh to fix repeated user issue
+sed -i '/echo -e "\\n$mgrUser $mgrPass admin|advUser\\n"/i if [ ! -f "${WMSAPP_HOME}/conf/admin.password" ] || ! grep -q "^${mgrUser}" "${WMSAPP_HOME}/conf/admin.password"; then' /sbin/entrypoint.sh
+sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
+
 EOF
 
 RUN chmod +x tuning.sh
@@ -549,6 +554,7 @@ check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
 cleanup
 
+# Create symlinks for Engine directories
 sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/logs/ $container_dir/Engine_logs
@@ -607,9 +613,7 @@ ${w}File Management:
    sudo cp [file_name] Engine_xxxx/[file_name]
 
 ${w}NOTE: Container must be restarted for changes to take effect:
-   ${white}cd $container_dir
-   ${white}sudo docker compose stop
-   ${white}sudo docker compose start
+   ${white}cd $container_dir && sudo docker compose stop && sudo docker compose start && cd $SCRIPT_DIR
 
 ${w}NOTE: To remove a volume:
    ${white}sudo docker volume rm volume_for_$container_name${NOCOLOR}
