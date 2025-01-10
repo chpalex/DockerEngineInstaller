@@ -564,6 +564,16 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 sudo docker exec -it $container_name bash
 sed -i '/echo -e "\\n$mgrUser $mgrPass admin|advUser\\n"/i if [ ! -f "${WMSAPP_HOME}/conf/admin.password" ] || ! grep -q "^${mgrUser}" "${WMSAPP_HOME}/conf/admin.password"; then' /sbin/entrypoint.sh
 sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
+exit
+
+# Replace existing lines with:
+sudo docker exec $container_name /bin/bash -c '
+    echo "Modifying entrypoint.sh..."
+    sed -i "/echo -e \"\\n\$mgrUser \$mgrPass admin|advUser\\n\"/i if [ ! -f \"\${WMSAPP_HOME}/conf/admin.password\" ] || ! grep -q \"^\${mgrUser}\" \"\${WMSAPP_HOME}/conf/admin.password\"; then" /sbin/entrypoint.sh && \
+    sed -i "/#echo -e \"\$mgrUser readwrite\\n\"/a fi" /sbin/entrypoint.sh && \
+    echo "Verification of changes:" && \
+    grep -A 5 -B 5 "if \[ ! -f" /sbin/entrypoint.sh
+'
 
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
