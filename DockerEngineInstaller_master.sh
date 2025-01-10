@@ -566,12 +566,32 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 # sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
 # exit
 
-# Replace existing lines with:
+# Replace existing docker exec command with debug version
 sudo docker exec $container_name /bin/bash -c '
-    echo "Modifying entrypoint.sh..."
-    sed -i "/echo -e \"\\n\$mgrUser \$mgrPass admin|advUser\\n\"/i if [ ! -f \"\${WMSAPP_HOME}/conf/admin.password\" ] || ! grep -q \"^\${mgrUser}\" \"\${WMSAPP_HOME}/conf/admin.password\"; then" /sbin/entrypoint.sh && \
-    sed -i "/#echo -e \"\$mgrUser readwrite\\n\"/a fi" /sbin/entrypoint.sh && \
-    echo "Verification of changes:" && \
+    echo "=== Starting entrypoint.sh modification ==="
+    echo "Current permissions:"
+    ls -l /sbin/entrypoint.sh
+    
+    echo "=== Original content ==="
+    cat /sbin/entrypoint.sh
+    
+    echo "=== Applying changes ==="
+    sed -i "/echo -e \"\\n\$mgrUser \$mgrPass admin|advUser\\n\"/i if [ ! -f \"\${WMSAPP_HOME}/conf/admin.password\" ] || ! grep -q \"^\${mgrUser}\" \"\${WMSAPP_HOME}/conf/admin.password\"; then" /sbin/entrypoint.sh
+    if [ $? -ne 0 ]; then
+        echo "First sed command failed"
+        exit 1
+    fi
+    
+    sed -i "/#echo -e \"\$mgrUser readwrite\\n\"/a fi" /sbin/entrypoint.sh
+    if [ $? -ne 0 ]; then
+        echo "Second sed command failed"
+        exit 1
+    fi
+    
+    echo "=== Modified content ==="
+    cat /sbin/entrypoint.sh
+    
+    echo "=== Verifying changes ==="
     grep -A 5 -B 5 "if \[ ! -f" /sbin/entrypoint.sh
 '
 
