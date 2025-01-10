@@ -561,10 +561,10 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 
 # Bug fix for Docker 
 # Edit /sbin/entrypoint.sh to fix repeated user issue
-sudo docker exec -it $container_name bash
-sed -i '/echo -e "\\n$mgrUser $mgrPass admin|advUser\\n"/i if [ ! -f "${WMSAPP_HOME}/conf/admin.password" ] || ! grep -q "^${mgrUser}" "${WMSAPP_HOME}/conf/admin.password"; then' /sbin/entrypoint.sh
-sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
-exit
+# sudo docker exec -it $container_name bash
+# sed -i '/echo -e "\\n$mgrUser $mgrPass admin|advUser\\n"/i if [ ! -f "${WMSAPP_HOME}/conf/admin.password" ] || ! grep -q "^${mgrUser}" "${WMSAPP_HOME}/conf/admin.password"; then' /sbin/entrypoint.sh
+# sed -i '/#echo -e "$mgrUser readwrite\\n"/a fi' /sbin/entrypoint.sh
+# exit
 
 # Replace existing lines with:
 sudo docker exec $container_name /bin/bash -c '
