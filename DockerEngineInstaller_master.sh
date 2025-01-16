@@ -130,7 +130,7 @@ duckDNS_create() {
     fi
     
     # Validate inputs are not empty
-    if [ -z "$jks_domain" ] || [ -z "$duckdns_token" ]; then
+    if [ -z "jks_duckdns_domain" ] || [ -z "$duckdns_token" ]; then
         whiptail --title "Error" --msgbox "Domain and token cannot be empty" 8 40
         return 1
     fi
