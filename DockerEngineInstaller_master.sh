@@ -701,6 +701,9 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 finish_ssl_configuration
 cleanup
 
+cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR
+cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR
+
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
 - Engine install directory is mapped to a persistent volume on host OS
