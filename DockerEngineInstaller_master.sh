@@ -200,6 +200,7 @@ check_for_jks() {
         jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
         
         if [ $? -eq 0 ] && [ -n "$jks_file" ]; then
+          jks_file="$upload/$jks_file"
           break
         else
           if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
@@ -209,11 +210,7 @@ check_for_jks() {
         fi
       done
 
-      if [ $? -eq 0 ]; then
-        ssl_config "$jks_file"
-      else
-        upload_jks
-      fi
+      ssl_config "$jks_file"
     fi
   fi
 }
@@ -221,18 +218,17 @@ check_for_jks() {
 ####
 # Function to configure SSL
 ssl_config() {
+  # Extract the base name of the jks_file
+  jks_file=$(basename "$1")
 
-# Extract the base name of the jks_file
-jks_file=$(basename "$jks_file")
-
-# Check if the jks_file variable contains the word "streamlock"
-if [[ "$jks_file" == *"streamlock"* ]]; then
-  jks_domain="${jks_file%.jks}"
-elif [[ "$jks_file" == *"duckdns"* ]]; then
-  jks_domain="$jks_duckdns_domain"
-else
-  jks_domain=""
-fi
+  # Check if the jks_file variable contains the word "streamlock"
+  if [[ "$jks_file" == *"streamlock"* ]]; then
+    jks_domain="${jks_file%.jks}"
+  elif [[ "$jks_file" == *"duckdns"* ]]; then
+    jks_domain="$jks_duckdns_domain"
+  else
+    jks_domain=""
+  fi
 
   # Capture the domain for the .jks file
   while true; do
@@ -262,7 +258,6 @@ fi
 
   # Setup Engine to use SSL for streaming and Manager access #
   # Create the tomcat.properties file
-
   cat <<EOL > "$upload/tomcat.properties"
 httpsPort=8090
 httpsKeyStore=/usr/local/WowzaStreamingEngine/conf/${jks_file}
@@ -650,8 +645,8 @@ convert_pem_to_jks() {
 # Function to finish SSL configuration
 finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
-    sudo cp "$upload/duckdns.ini" "$DockerEngineInstaller/config/dns-conf/"
-    convert_pem_to_jks "$jks_domain" "$DockerEngineInstaller/config/etc/letsencrypt/$jsk_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
+    sudo cp "$upload/duckdns.ini" "$swag/dns-conf/"
+    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/$jsk_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
 
 }
 
