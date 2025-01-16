@@ -40,6 +40,10 @@ mkdir -p "$DockerEngineInstaller"
 upload="$DockerEngineInstaller/upload"
 mkdir -p -m 777 "$upload"
 
+# Define the SWAG directory
+swag="$DockerEngineInstaller/config"
+mkdir -p -m 777 "$swag"
+
 ####
 ## Functions ##
 ####
