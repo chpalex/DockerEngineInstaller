@@ -645,7 +645,7 @@ convert_pem_to_jks() {
 finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
     sudo cp "$upload/duckdns.ini" "$swag/dns-conf/"
-    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/$jsk_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
+    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/$jks_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
 
 }
 
@@ -688,17 +688,18 @@ check_for_jks # runs upload_jks, ssl_config
 create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
-finish_ssl_configuration
-cleanup
+
 
 # Create symlinks for Engine directories
-sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/logs/ $container_dir/Engine_logs
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/content/ $container_dir/Engine_content
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/ $container_dir/Engine_transcoder
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
+
+finish_ssl_configuration
+cleanup
 
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
