@@ -397,7 +397,6 @@ EOL
   if [ -f "$upload/tomcat.properties" ]; then
     echo "COPY upload/tomcat.properties /usr/local/WowzaStreamingEngine/manager/conf/" >> Dockerfile
     echo "RUN chown wowza:wowza /usr/local/WowzaStreamingEngine/manager/conf/tomcat.properties" >> Dockerfile
-    echo "COPY upload/$jks_file /usr/local/WowzaStreamingEngine/conf/" >> Dockerfile
 
     # Change the <Port> line to have only 1935,554 ports
     echo "RUN sed -i 's|<Port>1935,80,443,554</Port>|<Port>1935,554</Port>|' /usr/local/WowzaStreamingEngine/conf/VHost.xml" >> Dockerfile
@@ -590,8 +589,8 @@ services:
       - STAGING=false #optional
       - DISABLE_F2B= #optional
     volumes:
-      - ./config:/config
-      - ./config/etc:/swag-ssl
+      - $DockerEngineInstaller/config:/config
+      - $DockerEngineInstaller/config/etc:/swag-ssl
     ports:
       - 444:443
       - 80:80 #optional
