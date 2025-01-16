@@ -40,9 +40,9 @@ mkdir -p "$DockerEngineInstaller"
 upload="$DockerEngineInstaller/upload"
 mkdir -p -m 777 "$upload"
 
-#
+####
 ## Functions ##
-
+####
 # Function to install Docker
 install_docker() {
   echo "   -----Docker not found, starting Docker installation-----"
@@ -56,13 +56,13 @@ install_docker() {
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   echo "   -----Docker Installation complete-----"
 }
-
+####
 # Function to install jq
 install_jq() {
   echo "   -----jq not found, installing jq-----"
   sudo apt-get install -y jq > /dev/null 2>&1
 }
-
+####
 # Function to fetch a list of WSE Dockers and prompt to select Wowza Engine version to install
 fetch_and_set_wowza_versions() {
   # Fetch all available versions of Wowza Engine from Docker
@@ -106,6 +106,68 @@ fetch_and_set_wowza_versions() {
   mkdir -p "$container_dir"
 }
 
+####
+# Function to guide DuckDNS domain setup and SSL creation
+duckDNS_create() {
+    # Get public IP
+    public_ip=$(curl -s https://api.ipify.org)
+    
+    # Show instructions dialog
+    whiptail --title "DuckDNS Setup" --msgbox "Please: \n\n1. Go to duckdns.org\n2. Create a new domain pointing to: $public_ip\n3. Copy your token\n\nClick OK when ready." 12 60
+    
+    # Get domain input
+    jks_duckdns_domain=$(whiptail --title "DuckDNS Domain" --inputbox "Enter your DuckDNS domain (without .duckdns.org):" 8 60 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then
+        echo "User cancelled DuckDNS setup"
+        return 1
+    fi
+    
+    # Get token input
+    duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 60 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then
+        echo "User cancelled DuckDNS setup"
+        return 1
+    fi
+    
+    # Validate inputs are not empty
+    if [ -z "$jks_domain" ] || [ -z "$duckdns_token" ]; then
+        whiptail --title "Error" --msgbox "Domain and token cannot be empty" 8 40
+        return 1
+    fi
+    
+    # Store variables for later use
+    export jks_duckdns_domain
+    export duckdns_token
+    
+    # Ask if the user wants to use DuckDNS for Wowza Streaming Engine access
+    if whiptail --title "DuckDNS Setup" --yesno "Do you want to use DuckDNS for Wowza Streaming Engine access?" 10 60; then
+        # Create placeholder JKS file
+        touch "$upload/${jks_duckdns_domain}.jks"
+        check_for_jks
+        if [ $? -ne 0 ]; then
+            whiptail --title "Error" --msgbox "Failed to create JKS placeholder file" 8 40
+            return 1
+        fi
+    else
+        check_for_jks
+        return 0
+    fi
+    
+    # Create duckdns.ini with token
+    echo "dns_duckdns_token=${duckdns_token}" > "$upload/duckdns.ini"
+    if [ $? -ne 0 ]; then
+        whiptail --title "Error" --msgbox "Failed to create duckdns.ini file" 8 40
+        rm -f "$upload/${jks_duckdns_domain}.jks"
+        return 1
+    fi
+    
+    # Set permissions
+    chmod 600 "$upload/duckdns.ini"
+
+    return 0
+}
+
+####
 # Function to scan for .jks file
 check_for_jks() {
   whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration\nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
@@ -152,6 +214,7 @@ check_for_jks() {
   fi
 }
 
+####
 # Function to configure SSL
 ssl_config() {
 
@@ -161,6 +224,8 @@ jks_file=$(basename "$jks_file")
 # Check if the jks_file variable contains the word "streamlock"
 if [[ "$jks_file" == *"streamlock"* ]]; then
   jks_domain="${jks_file%.jks}"
+elif [[ "$jks_file" == *"duckdns"* ]]; then
+  jks_domain="$jks_duckdns_domain"
 else
   jks_domain=""
 fi
@@ -180,7 +245,7 @@ fi
 
   # Capture the password for the .jks file
   while true; do
-    jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (to establish https connection to Wowza Manager):" 10 60 3>&1 1>&2 2>&3)
+    jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (if you do not have one, please enter one now):" 10 60 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ] && [ -n "$jks_password" ]; then
       break
     else
@@ -202,6 +267,7 @@ httpsKeyStorePassword=${jks_password}
 EOL
 }
 
+####
 # Function to upload .jks file
 upload_jks() {
   while true; do
@@ -256,6 +322,11 @@ upload_jks() {
   done
 }
 
+####
+# Function to convert .pem files to jks for Wowza
+
+
+####
 # Function to create Dockerfile and build Docker image for Wowza Engine
 create_docker_image() {
   # Change directory to $DockerEngineInstaller
@@ -455,14 +526,20 @@ else
   prompt_credentials "" ""
 fi
 
+# Get local timezone
+tz=$(timedatectl | grep "Time zone" | awk '{print $3}')
+
 # Create .env file
 cat <<EOL > "$container_dir/.env"
 WSE_MGR_USER=${WSE_MGR_USER}
 WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
+URL=${jks_domain}
+TZ=${tz}
 EOL
 }
 
+####
 # Function to create docker-compose.yml and run docker compose up
 create_and_run_docker_compose() {
   # Check if the volume exists, create it if it doesn't
@@ -486,6 +563,7 @@ services:
       - "8084-8090:8084-8090/tcp"
     volumes:
       - ${volume_name}:/usr/local/WowzaStreamingEngine
+      - /swag-ssl/letsencrypt/live/${domain}:/usr/local/WowzaStreamingEngine/conf/ssl
     entrypoint: /sbin/entrypoint.sh
     env_file: 
       - ./.env
@@ -493,6 +571,33 @@ services:
       - WSE_LIC=${WSE_LIC}
       - WSE_MGR_USER=${WSE_MGR_USER}
       - WSE_MGR_PASS=${WSE_MGR_PASS}
+  swag:
+    image: lscr.io/linuxserver/swag:latest
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - URL=${URL}
+      - VALIDATION=dns
+      - SUBDOMAINS=www, #optional
+      - CERTPROVIDER= #optional
+      - DNSPLUGIN=duckdns #optional
+      - PROPAGATION= #optional
+      - EMAIL= #optional
+      - ONLY_SUBDOMAINS=false #optional
+      - EXTRA_DOMAINS= #optional
+      - STAGING=false #optional
+      - DISABLE_F2B= #optional
+    volumes:
+      - ./config:/config
+      - ./config/etc:/swag-ssl
+    ports:
+      - 444:443
+      - 80:80 #optional
+    restart: unless-stopped    
 volumes:
   ${volume_name}:
     external: true      
@@ -511,10 +616,46 @@ EOL
   sudo docker compose logs
 }
 
+# Function to convert PEM to PKCS12 and then to JKS
+convert_pem_to_jks() {
+    local domain=$1
+    local pem_dir=$2
+    local jks_dir=$3
+    local pkcs12_password=$4
+    local jks_password=$5
+
+    # Convert PEM to PKCS12
+    sudo openssl pkcs12 -export -in "$pem_dir/cert.pem" -inkey "$pem_dir/privkey.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
+    if [ $? -ne 0 ]; then
+        echo "Failed to convert PEM to PKCS12"
+        return 1
+    fi
+
+    # Convert PKCS12 to JKS
+    sudo keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore "$jks_dir/$domain.jks" -srckeystore "$pem_dir/$domain.p12" -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias "$domain"
+    if [ $? -ne 0 ]; then
+        echo "Failed to convert PKCS12 to JKS"
+        return 1
+    fi
+
+    echo "Successfully converted PEM to JKS"
+    return 0
+}
+
+####
+# Function to finish SSL configuration
+finish_ssl_configuration() {
+    sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
+    sudo cp "$upload/duckdns.ini" "$DockerEngineInstaller/config/dns-conf/"
+    convert_pem_to_jks "$jks_domain" "$DockerEngineInstaller/config/etc/letsencrypt/$jsk_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
+
+}
+
+####
 # Function to clean up the install directory and prompt user to delete Docker images and containers
 cleanup() {
 
-  echo "Cleaning up the install directory..."
+echo "Cleaning up the install directory..."
 
   if [ -f "$DockerEngineInstaller/Dockerfile" ]; then
     sudo rm "$DockerEngineInstaller/Dockerfile"
@@ -544,10 +685,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+duckDNS_create
 check_for_jks # runs upload_jks, ssl_config
 create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
+finish_ssl_configuration
 cleanup
 
 # Create symlinks for Engine directories
