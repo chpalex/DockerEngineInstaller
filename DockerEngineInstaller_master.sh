@@ -49,38 +49,45 @@ mkdir -p -m 777 "$swag"
 ####
 # Function to install Docker
 install_docker() {
+  echo -e "${w}Checking if Docker is installed"
+if ! command -v docker &> /dev/null; then
   echo "   -----Docker not found, starting Docker installation-----"
   sudo apt-get update
   sudo apt-get install -y ca-certificates curl
   sudo install -m 0755 -d /etc/apt/keyrings
   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
   sudo chmod a+r /etc/apt/keyrings/docker.asc
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt-get update
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   echo "   -----Docker Installation complete-----"
+  else
+  echo -e "${w}Docker found"
+fi
 }
 ####
 # Function to install jq
 install_jq() {
+  if ! command -v jq &> /dev/null; then
   echo "   -----jq not found, installing jq-----"
   sudo apt-get install -y jq > /dev/null 2>&1
+  fi
 }
 ####
 # Function to fetch a list of WSE Dockers and prompt to select Wowza Engine version to install
 fetch_and_set_wowza_versions() {
   # Fetch all available versions of Wowza Engine from Docker
-  all_versions=""
+  all_versions=()
   url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
   while [ "$url" != "null" ]; do
     response=$(curl -s "$url")
     tags=$(echo "$response" | jq -r '.results[] | "\(.name) \(.last_updated)"')
-    all_versions="$all_versions"$'\n'"$tags"
+    all_versions+=("$tags")
     url=$(echo "$response" | jq -r '.next')
   done
   
   # Sort versions by date released and remove the date field
-  sorted_versions=$(echo "$all_versions" | sort -k2 -r | awk '{print $1}')
+  sorted_versions=$(printf "%s\n" "${all_versions[@]}" | sort -k2 -r | awk '{print $1}')
 
   # Convert sorted versions to a format suitable for whiptail
   version_list=()
@@ -98,6 +105,10 @@ fetch_and_set_wowza_versions() {
 
   # Use whiptail to create a menu for selecting the version
   engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 80 $list_height "${version_list[@]}" 3>&1 1>&2 2>&3)
+  if [ $? -ne 0 ] || [ -z "$engine_version" ]; then
+    echo "No Wowza Engine version selected, exiting."
+    exit 1
+  fi
 
   # Prompt for Docker container name
   container_name=$(whiptail --inputbox "Enter the name for this WSE install (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
@@ -134,7 +145,7 @@ duckDNS_create() {
     fi
     
     # Validate inputs are not empty
-    if [ -z "jks_duckdns_domain" ] || [ -z "$duckdns_token" ]; then
+    if [ -z "$jks_duckdns_domain" ] || [ -z "$duckdns_token" ]; then
         whiptail --title "Error" --msgbox "Domain and token cannot be empty" 8 40
         return 1
     fi
@@ -643,7 +654,6 @@ finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
     sudo cp "$upload/duckdns.ini" "$swag/dns-conf/"
     convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/live/$jks_domain" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
-
 }
 
 ####
@@ -661,19 +671,9 @@ echo "Cleaning up the install directory..."
   fi
 }
 
-# Check if Docker is installed
-echo -e "${w}Checking if Docker is installed"
-if ! command -v docker &> /dev/null; then
-  install_docker
-else
-  echo -e "${w}Docker found"
-fi
-
-# Check if jq is installed
-if ! command -v jq &> /dev/null; then
-  install_jq
-fi
-
+##### Start the Installation #####
+install_docker
+install_jq
 fetch_and_set_wowza_versions
 if [ $? -ne 0 ]; then
   echo -e "${w}Installation cancelled by user."
@@ -769,5 +769,6 @@ else
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: ${w}http://$public_ip:8088/enginemanager"
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: ${w}http://$private_ip:8088/enginemanager${NOCOLOR}"
 fi
-
-rm $SCRIPT_DIR/DockerEngineInstaller.sh
+if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
+  rm $SCRIPT_DIR/DockerEngineInstaller.sh
+fi
