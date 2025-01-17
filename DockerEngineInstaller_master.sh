@@ -611,7 +611,7 @@ EOL
 
   # Run docker compose up
   cd "$container_dir"
-  sudo docker compose --build create 
+  sudo docker compose create --build
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
