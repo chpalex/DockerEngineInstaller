@@ -618,7 +618,7 @@ EOL
 
   # Run docker compose up
   cd "$container_dir"
-  sudo docker compose start
+  sudo docker compose up -d
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
