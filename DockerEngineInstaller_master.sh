@@ -580,7 +580,7 @@ services:
       - STAGING=false #optional
       - DISABLE_F2B= #optional
     volumes:
-      - $DockerEngineInstaller/config:/config
+      - ${DockerEngineInstaller}/config:/config
     ports:
       - 444:443
       - 80:80 #optional
