@@ -179,9 +179,7 @@ duckDNS_create() {
         rm -f "$upload/${jks_duckdns_domain}.jks"
         return 1
     fi
-    
-    # Set permissions
-    chmod 600 "$upload/duckdns.ini"
+   cp "$upload/duckdns.ini" "$swag/dns-conf/duckdns.ini"
 
     return 0
 }
@@ -560,6 +558,7 @@ create_and_run_docker_compose() {
   if ! docker volume ls --format '{{.Name}}' | grep -q "^${volume_name}$"; then
     docker volume create "${volume_name}"
   fi
+mkdir -p "$DockerEngineInstaller/config/dns-config"
 
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
