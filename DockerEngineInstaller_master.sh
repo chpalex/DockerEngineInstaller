@@ -654,7 +654,7 @@ convert_pem_to_jks() {
 # Function to finish SSL configuration
 finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
-    sudo docker cp "$upload/duckdns.ini" swag:/config/dns-conf/duckdns.ini"
+    sudo docker cp "$upload/duckdns.ini" swag:/config/dns-conf/duckdns.ini
     convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/live/$jks_domain" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
 }
 
