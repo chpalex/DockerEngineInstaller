@@ -657,7 +657,6 @@ convert_pem_to_jks() {
 ####
 # Function to finish SSL configuration
 finish_ssl_configuration() {
-    sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
     sudo docker cp "$upload/duckdns.ini" swag:/config/dns-conf/duckdns.ini
     convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/archive/$jks_domain" "$upload" "$jks_password" "$jks_password"
     sudo docker cp "$upload/$jks_domain.jks" "${container_name}:/usr/local/WowzaStreamingEngine/conf/"
