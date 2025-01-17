@@ -610,9 +610,8 @@ volumes:
 EOL
 
   # Run docker compose up
-  echo "Running docker compose up..."
   cd "$container_dir"
-  sudo docker compose up -d
+  sudo docker compose --build create 
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
@@ -686,6 +685,7 @@ create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
 
+sudo docker compose start
 
 # Create symlinks for Engine directories
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
