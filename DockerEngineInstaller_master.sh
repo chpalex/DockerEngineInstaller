@@ -567,6 +567,8 @@ services:
     container_name: swag
     cap_add:
       - NET_ADMIN
+    env_file: 
+      - ./.env
     environment:
       - PUID=1000
       - PGID=1000
