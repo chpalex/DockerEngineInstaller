@@ -137,6 +137,9 @@ duckDNS_create() {
         return 1
     fi
     
+    # Append .duckdns.org to the domain
+    jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org"
+
     # Get token input
     duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 60 3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
