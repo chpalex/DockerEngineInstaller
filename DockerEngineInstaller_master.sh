@@ -548,26 +548,6 @@ create_and_run_docker_compose() {
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yaml"
 services:
-  wowza:
-    image: docker.io/library/wowza_engine:${engine_version}
-    container_name: ${container_name}
-    restart: always
-    ports:
-      - "6970-7000:6970-7000/udp"
-      - "443:443"
-      - "1935:1935"
-      - "554:554"
-      - "8084-8090:8084-8090/tcp"
-    volumes:
-      - ${volume_name}:/usr/local/WowzaStreamingEngine
-      - /swag-ssl/letsencrypt/live/${domain}:/usr/local/WowzaStreamingEngine/conf/ssl
-    entrypoint: /sbin/entrypoint.sh
-    env_file: 
-      - ./.env
-    environment:
-      - WSE_LIC=${WSE_LIC}
-      - WSE_MGR_USER=${WSE_MGR_USER}
-      - WSE_MGR_PASS=${WSE_MGR_PASS}
   swag:
     image: lscr.io/linuxserver/swag:latest
     container_name: swag
@@ -590,11 +570,29 @@ services:
       - DISABLE_F2B= #optional
     volumes:
       - $DockerEngineInstaller/config:/config
-      - $DockerEngineInstaller/config/etc:/swag-ssl
     ports:
       - 444:443
       - 80:80 #optional
-    restart: unless-stopped    
+    restart: unless-stopped  
+  wowza:
+    image: docker.io/library/wowza_engine:${engine_version}
+    container_name: ${container_name}
+    restart: always
+    ports:
+      - "6970-7000:6970-7000/udp"
+      - "443:443"
+      - "1935:1935"
+      - "554:554"
+      - "8084-8090:8084-8090/tcp"
+    volumes:
+      - ${volume_name}:/usr/local/WowzaStreamingEngine
+    entrypoint: /sbin/entrypoint.sh
+    env_file: 
+      - ./.env
+    environment:
+      - WSE_LIC=${WSE_LIC}
+      - WSE_MGR_USER=${WSE_MGR_USER}
+      - WSE_MGR_PASS=${WSE_MGR_PASS}  
 volumes:
   ${volume_name}:
     external: true      
@@ -644,7 +642,7 @@ convert_pem_to_jks() {
 finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
     sudo cp "$upload/duckdns.ini" "$swag/dns-conf/"
-    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/$jks_domain/live" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
+    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/live/$jks_domain" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
 
 }
 
