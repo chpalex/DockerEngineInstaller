@@ -19,6 +19,8 @@ whiptail --title "Docker Engine Installer" --msgbox "This script will:
 - Check and install Docker if not present
 - Fetch a list of available Docker Wowza Engine versions
 - Handle SSL configuration
+- Install a webserver with auto-renewal for SSL certificates
+- Use DuckDNS for dynamic DNS
 - Tune Wowza Streaming Engine configuration
 - Create a custom Docker image for Wowza Engine
 - Prompt for Engine credentials and license key
@@ -560,7 +562,7 @@ create_and_run_docker_compose() {
   fi
 
   # Create docker-compose.yml
-  cat <<EOL > "$container_dir/docker-compose.yaml"
+  cat <<EOL > "$container_dir/docker-compose.yml"
 services:
   swag:
     image: lscr.io/linuxserver/swag:latest
@@ -572,8 +574,8 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=${TZ}
-      - URL=${URL}
+      - TZ=\${TZ}
+      - URL=\${URL}
       - VALIDATION=dns
       - SUBDOMAINS=www, #optional
       - CERTPROVIDER= #optional
