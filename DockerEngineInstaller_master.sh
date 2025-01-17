@@ -618,7 +618,7 @@ EOL
 
   # Run docker compose up
   cd "$container_dir"
-  sudo docker compose create --build
+  sudo docker compose start
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
@@ -637,7 +637,7 @@ convert_pem_to_jks() {
     local jks_password=$5
 
     # Convert PEM to PKCS12
-    sudo openssl pkcs12 -export -in "$pem_dir/cert.pem" -inkey "$pem_dir/privkey.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
+    sudo openssl pkcs12 -export -in "$pem_dir/cert1.pem" -in "$pem_dir/chain1.pem" -inkey "$pem_dir/privkey1.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
     if [ $? -ne 0 ]; then
         echo "Failed to convert PEM to PKCS12"
         return 1
@@ -659,7 +659,8 @@ convert_pem_to_jks() {
 finish_ssl_configuration() {
     sudo cp "$upload/$jks_file" "$container_dir/Engine_conf/"
     sudo docker cp "$upload/duckdns.ini" swag:/config/dns-conf/duckdns.ini
-    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/live/$jks_domain" "$container_dir/Engine_conf" "$jks_password" "$jks_password"
+    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/live/$jks_domain" "$upload" "$jks_password" "$jks_password"
+    sudo docker cp "$upload/$jks_domain.jks" "${container_name}:/usr/local/WowzaStreamingEngine/conf/"
 }
 
 ####
@@ -691,8 +692,6 @@ check_for_jks # runs upload_jks, ssl_config
 create_docker_image
 check_env_prompt_credentials # runs prompt_credentials
 create_and_run_docker_compose
-
-sudo docker compose start
 
 # Create symlinks for Engine directories
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
