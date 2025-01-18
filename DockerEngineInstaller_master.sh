@@ -184,10 +184,8 @@ duckDNS_create() {
 
     if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
 
-        # Create files automically
-        touch "$upload/${jks_duckdns_domain}.jks.tmp" && 
-        mv "$upload/${jks_duckdns_domain}.jks.tmp" "$upload/${jks_duckdns_domain}.jks" || {
-            rm -f "$upload/${jks_duckdns_domain}.jks.tmp"
+        # Create JKS file
+        touch "$upload/${jks_duckdns_domain}.jks" || {
             whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
             return 1
         }
