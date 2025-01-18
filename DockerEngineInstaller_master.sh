@@ -43,7 +43,7 @@ mkdir -p -m 777 "$swag"
 # Function to install Docker
 install_docker() {
   echo -e "${w}Checking if Docker is installed"
-if ! command -v docker &> /dev/null; then
+  if ! command -v docker &> /dev/null; then
   echo "   -----Docker not found, starting Docker installation-----"
   sudo apt-get update
   sudo apt-get install -y ca-certificates curl
@@ -56,7 +56,7 @@ if ! command -v docker &> /dev/null; then
   echo "   -----Docker Installation complete-----"
   else
   echo -e "${w}Docker found"
-fi
+  fi
 }
 ####
 # Function to install jq
@@ -67,6 +67,8 @@ install_jq() {
   fi
 }
 
+####
+# Fetch and set Wowza versions
 fetch_and_set_wowza_versions() {
     local url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
     local versions=()
@@ -128,13 +130,6 @@ fetch_and_set_wowza_versions() {
         
         if [ $? -ne 0 ]; then
             container_name="wse_${engine_version}"
-        fi
-        
-        # Validate container name
-        if [[ $container_name =~ ^[a-zA-Z0-9_-]+$ ]]; then
-            break
-        else
-            whiptail --msgbox "Invalid container name. Use only letters, numbers, underscore, and hyphen." 8 78
         fi
     done
 
@@ -374,10 +369,6 @@ upload_jks() {
     fi
   done
 }
-
-####
-# Function to convert .pem files to jks for Wowza
-
 
 ####
 # Function to create Dockerfile and build Docker image for Wowza Engine
