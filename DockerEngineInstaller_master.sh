@@ -191,19 +191,27 @@ duckDNS_create() {
         }
 
         # Create and copy duckdns.ini with secure permissions
-        printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini.tmp" &&
-        mv "$upload/duckdns.ini.tmp" "$upload/duckdns.ini" &&
-        cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" &&
-        chmod 600 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
-            rm -f "$upload/duckdns.ini.tmp" "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
-            whiptail --title "Error" --msgbox "Failed to setup DuckDNS configuration" 8 $DIALOG_WIDTH
+        if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
+            if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
+                sudo chmod 600 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+                    whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
+                    rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                    return 1
+                }
+            else
+                whiptail --title "Error" --msgbox "Failed to copy DuckDNS configuration" 8 $DIALOG_WIDTH
+                rm -f "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                return 1
+            fi
+        else
+            whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
             return 1
-        }
-    else
-        check_for_jks
-    fi
+        fi
+            else
+                check_for_jks
+            fi
 
-    return 0
+            return 0
 }
 
 ####
