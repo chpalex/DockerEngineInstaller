@@ -122,16 +122,15 @@ fetch_and_set_wowza_versions() {
         exit 1
     fi
 
-    # Get container name with validation
-    while true; do
-        container_name=$(whiptail --inputbox "Enter the name for this WSE install:" \
-                                 8 78 "wse_${engine_version}" \
-                                 --title "Docker Container Name" 3>&1 1>&2 2>&3)
-        
-        if [ $? -ne 0 ]; then
-            container_name="wse_${engine_version}"
-        fi
-    done
+    # Prompt for Docker container name
+    container_name=$(whiptail --inputbox "Enter the name for this WSE install (default: wse_${engine_version}):" \
+                              8 78 "wse_${engine_version}" \
+                              --title "Docker Container Name" 3>&1 1>&2 2>&3)
+
+    # Check if user canceled or input is empty, set default name
+    if [ $? -ne 0 ] || [ -z "$container_name" ]; then
+        container_name="wse_${engine_version}"
+    fi
 
     # Create container directory
     container_dir="$DockerEngineInstaller/$container_name"
