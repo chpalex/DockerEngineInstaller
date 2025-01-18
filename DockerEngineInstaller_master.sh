@@ -665,7 +665,7 @@ convert_pem_to_jks() {
 
     # Convert PEM to PKCS12
     sudo docker exec -it wse_4.9.2 bash
-    sudo openssl pkcs12 -export -in "$pem_dir/cert1.pem" -in "$pem_dir/chain1.pem" -inkey "$pem_dir/privkey1.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
+    openssl pkcs12 -export -in "$pem_dir/cert1.pem" -in "$pem_dir/chain1.pem" -inkey "$pem_dir/privkey1.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
     if [ $? -ne 0 ]; then
         echo "Failed to convert PEM to PKCS12"
         return 1
@@ -673,7 +673,7 @@ convert_pem_to_jks() {
 
     # Convert PKCS12 to JKS
     cd /usr/local/WowzaStreamingEngine/jre/bin
-    sudo keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore "$jks_dir/$domain.jks" -srckeystore "$pem_dir/$domain.p12" -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias "$domain"
+    keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore "$jks_dir/$domain.jks" -srckeystore "$pem_dir/$domain.p12" -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias "$domain"
     if [ $? -ne 0 ]; then
         echo "Failed to convert PKCS12 to JKS"
         return 1
