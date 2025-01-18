@@ -166,24 +166,20 @@ duckDNS_create() {
     # Show instructions
     whiptail --title "DuckDNS Setup" --msgbox "Please: \n\n1. Go to duckdns.org\n2. Create a new domain pointing to: $public_ip\n3. Copy your token\n\nClick OK when ready." $DIALOG_HEIGHT $DIALOG_WIDTH
 
-    # Get and validate domain
+    # Get domain
     while true; do
         jks_duckdns_domain=$(whiptail --title "DuckDNS Domain" --inputbox "Enter your DuckDNS domain (without .duckdns.org):" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
         
         [[ $? -ne 0 ]] && return 1
-        [[ "$jks_duckdns_domain" =~ $DOMAIN_PATTERN ]] && break
-        
-        whiptail --title "Error" --msgbox "Invalid domain format. Use only letters, numbers, and hyphens." 8 $DIALOG_WIDTH
+        break
     done
 
-    # Get and validate token
+    # Get token
     while true; do
         duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
         
         [[ $? -ne 0 ]] && return 1
-        [[ "$duckdns_token" =~ $TOKEN_PATTERN ]] && break
-        
-        whiptail --title "Error" --msgbox "Invalid token format" 8 $DIALOG_WIDTH
+        break
     done
 
     # Export variables and append domain
