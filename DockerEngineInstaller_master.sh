@@ -613,7 +613,7 @@ services:
       - STAGING=false #optional
       - DISABLE_F2B= #optional
     volumes:
-      - ${DockerEngineInstaller}/config:/config
+      - ${swag}:/config
     ports:
       - 444:443
       - 80:80 #optional
@@ -630,6 +630,7 @@ services:
       - "8084-8090:8084-8090/tcp"
     volumes:
       - ${volume_name}:/usr/local/WowzaStreamingEngine
+      - ${swag}/etc/letsencrypt:/usr/local/WowzaStreamingEngine/conf/ssl
     entrypoint: /sbin/entrypoint.sh
     env_file: 
       - ./.env
@@ -657,8 +658,8 @@ EOL
 # Function to convert PEM to PKCS12 and then to JKS
 convert_pem_to_jks() {
     local domain=$1
-    local pem_dir=$2
-    local jks_dir=$3
+    local pem_dir=/usr/local/WowzaStreamingEngine/conf/ssl/archive/$domain
+    local jks_dir=/usr/local/WowzaStreamingEngine/conf
     local pkcs12_password=$4
     local jks_password=$5
 
@@ -728,9 +729,6 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 
 finish_ssl_configuration
 cleanup
-
-cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR
-cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR
 
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
