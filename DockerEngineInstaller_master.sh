@@ -15,18 +15,41 @@ export NEWT_COLORS='
 root=,black'
 
 # Display info box about the script and function scripts
-whiptail --title "Docker Engine Installer" --msgbox "This script will:
-- Check and install Docker if not present
-- Fetch a list of available Docker Wowza Engine versions
-- Handle SSL configuration
-- Install a webserver with auto-renewal for SSL certificates
-- Use DuckDNS for dynamic DNS
-- Tune Wowza Streaming Engine configuration
-- Create a custom Docker image for Wowza Engine
-- Prompt for Engine credentials and license key
-- Create and run Docker Compose file
-- Clean up installation files
-- Provide instructions to manage and connect to Wowza Streaming Engine" 20 78
+whiptail --title "Docker Engine Workflow Installer" --msgbox "
+Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine in a Docker environment.
+
+#### Key Features:
+1. **Environment Setup**
+   - Automatic Docker installation if not present
+   - Creation of required directory structure
+   - Configuration of necessary permissions
+
+2. **Wowza Configuration**
+   - Interactive version selection from Docker Hub
+   - Automated container naming and setup
+   - Secure credential management
+
+3. **Network & Security**
+   - SSL certificate configuration
+   - Integration with DuckDNS for dynamic DNS
+   - Webserver setup with auto-renewal for SSL
+
+4. **Optimization**
+   - Wowza Engine performance tuning
+   - Custom Docker image creation
+   - Environment-specific configurations
+
+5. **Deployment**
+   - Docker Compose file generation
+   - Automated container deployment
+   - Post-installation cleanup
+
+6. **Management**
+   - Provides connection instructions
+   - Setup monitoring and management tools
+   - Environment maintenance guidance
+
+This script simplifies the complex process of setting up a production-ready Wowza Streaming Engine environment with proper security, networking, and performance configurations." 75 120
 
 #
 ## Set directory variables
@@ -36,7 +59,7 @@ SCRIPT_DIR=$(realpath $(dirname "$0"))
 
 # Define the build directory
 DockerEngineInstaller="$SCRIPT_DIR/DockerEngineInstaller"
-mkdir -p "$DockerEngineInstaller"
+mkdir -p -m 777 "$DockerEngineInstaller"
 
 # Define the base_files directory
 upload="$DockerEngineInstaller/upload"
@@ -48,6 +71,7 @@ mkdir -p -m 777 "$swag"
 
 ####
 ## Functions ##
+
 ####
 # Function to install Docker
 install_docker() {
@@ -75,112 +99,157 @@ install_jq() {
   sudo apt-get install -y jq > /dev/null 2>&1
   fi
 }
-####
-# Function to fetch a list of WSE Dockers and prompt to select Wowza Engine version to install
+
 fetch_and_set_wowza_versions() {
-  # Fetch all available versions of Wowza Engine from Docker
-  all_versions=()
-  url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
-  while [ "$url" != "null" ]; do
-    response=$(curl -s "$url")
-    tags=$(echo "$response" | jq -r '.results[] | "\(.name) \(.last_updated)"')
-    all_versions+=("$tags")
-    url=$(echo "$response" | jq -r '.next')
-  done
-  
-  # Sort versions by date released and remove the date field
-  sorted_versions=$(printf "%s\n" "${all_versions[@]}" | sort -k2 -r | awk '{print $1}')
+    local url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
+    local versions=()
+    local max_retries=3
+    local retry_count=0
 
-  # Convert sorted versions to a format suitable for whiptail
-  version_list=()
-  while IFS= read -r version; do
-    version_list+=("$version" "")
-  done <<< "$sorted_versions"
+    # Fetch versions with retry logic
+    while [ "$url" != "null" ]; do
+        response=$(curl -s -f "$url")
+        if [ $? -ne 0 ]; then
+            retry_count=$((retry_count + 1))
+            if [ $retry_count -ge $max_retries ]; then
+                echo "Error: Failed to fetch versions after $max_retries attempts"
+                exit 1
+            fi
+            sleep 2
+            continue
+        }
 
-  # Calculate the height of the menu based on the number of versions
-  menu_height=$((${#version_list[@]} / 2 + 10))
-  [ $menu_height -gt 20 ] && menu_height=20  # Limit the height to 20
+        # Process response in a single jq call
+        versions+=( $(echo "$response" | jq -r '.results[] | .name') )
+        url=$(echo "$response" | jq -r '.next')
+    done
 
-  # Calculate the list height
-  list_height=$((${#version_list[@]} / 2))
-  [ $list_height -gt 10 ] && list_height=10  # Limit the list height to 10
+    # Early exit if no versions found
+    if [ ${#versions[@]} -eq 0 ]; then
+        echo "Error: No versions found"
+        exit 1
+    }
 
-  # Use whiptail to create a menu for selecting the version
-  engine_version=$(whiptail --title "Select Wowza Engine Version" --menu "Available Docker Wowza Engine Versions:" $menu_height 80 $list_height "${version_list[@]}" 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ] || [ -z "$engine_version" ]; then
-    echo "No Wowza Engine version selected, exiting."
-    exit 1
-  fi
+    # Create menu items directly
+    local menu_items=()
+    for version in "${versions[@]}"; do
+        menu_items+=("$version" "")
+    done
 
-  # Prompt for Docker container name
-  container_name=$(whiptail --inputbox "Enter the name for this WSE install (default: wse_${engine_version}):" 8 78 "wse_${engine_version}" --title "Docker Container Name" 3>&1 1>&2 2>&3)
-  if [ $? -ne 0 ] || [ -z "$container_name" ]; then
-    container_name="wse_${engine_version}"
-  fi
+    # Calculate menu dimensions
+    local menu_height=$(( min(${#menu_items[@]} / 2 + 7, 20) ))
+    local list_height=$(( min(${#menu_items[@]} / 2, 10) ))
 
-  # Define the Container directory and Engine conf directory
-  container_dir="$DockerEngineInstaller/$container_name"
-  mkdir -p "$container_dir"
+    # Select version
+    engine_version=$(whiptail --title "Select Wowza Engine Version" \
+                             --menu "Available Docker Wowza Engine Versions:" \
+                             $menu_height 80 $list_height \
+                             "${menu_items[@]}" 3>&1 1>&2 2>&3)
+
+    [ $? -ne 0 ] || [ -z "$engine_version" ] && {
+        echo "No Wowza Engine version selected, exiting."
+        exit 1
+    }
+
+    # Get container name with validation
+    while true; do
+        container_name=$(whiptail --inputbox "Enter the name for this WSE install:" \
+                                 8 78 "wse_${engine_version}" \
+                                 --title "Docker Container Name" 3>&1 1>&2 2>&3)
+        
+        [ $? -ne 0 ] && container_name="wse_${engine_version}"
+        
+        # Validate container name
+        if [[ $container_name =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            break
+        else
+            whiptail --msgbox "Invalid container name. Use only letters, numbers, underscore, and hyphen." 8 78
+        fi
+    done
+
+    # Create container directory
+    container_dir="$DockerEngineInstaller/$container_name"
+    mkdir -p "$container_dir" || {
+        echo "Error: Failed to create container directory"
+        exit 1
+    }
 }
 
 ####
 # Function to guide DuckDNS domain setup and SSL creation
 duckDNS_create() {
-    # Get public IP
-    public_ip=$(curl -s https://api.ipify.org)
-    
-    # Show instructions dialog
-    whiptail --title "DuckDNS Setup" --msgbox "Please: \n\n1. Go to duckdns.org\n2. Create a new domain pointing to: $public_ip\n3. Copy your token\n\nClick OK when ready." 12 60
-    
-    # Get domain input
-    jks_duckdns_domain=$(whiptail --title "DuckDNS Domain" --inputbox "Enter your DuckDNS domain (without .duckdns.org):" 8 60 3>&1 1>&2 2>&3)
-    if [ $? -ne 0 ]; then
-        echo "User cancelled DuckDNS setup"
-        return 1
-    fi
-    
-    # Append .duckdns.org to the domain
-    jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org"
+    local readonly DIALOG_WIDTH=60
+    local readonly DIALOG_HEIGHT=12
+    local readonly DNS_CONF_DIR="$DockerEngineInstaller/config/dns-conf"
+    local readonly DOMAIN_PATTERN='^[a-zA-Z0-9-]+$'
+    local readonly TOKEN_PATTERN='^[a-f0-9]{32}$'
+    local public_ip
 
-    # Get token input
-    duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 60 3>&1 1>&2 2>&3)
-    if [ $? -ne 0 ]; then
-        echo "User cancelled DuckDNS setup"
+    # Get public IP with retry
+    for i in {1..3}; do
+        public_ip=$(curl -s -f https://api.ipify.org)
+        [[ $? -eq 0 && -n "$public_ip" ]] && break
+        sleep 2
+    done
+
+    [[ -z "$public_ip" ]] && {
+        whiptail --title "Error" --msgbox "Failed to get public IP" 8 $DIALOG_WIDTH
         return 1
-    fi
-    
-    # Validate inputs are not empty
-    if [ -z "$jks_duckdns_domain" ] || [ -z "$duckdns_token" ]; then
-        whiptail --title "Error" --msgbox "Domain and token cannot be empty" 8 40
-        return 1
-    fi
-    
-    # Store variables for later use
-    export jks_duckdns_domain
-    export duckdns_token
-    
-    # Ask if the user wants to use DuckDNS for Wowza Streaming Engine access
-    if whiptail --title "DuckDNS Setup" --yesno "Do you want to use DuckDNS for Wowza Streaming Engine access?" 10 60; then
-        # Create placeholder JKS file
-        touch "$upload/${jks_duckdns_domain}.jks"
-        if [ $? -ne 0 ]; then
-            whiptail --title "Error" --msgbox "Failed to create JKS placeholder file" 8 40
+    }
+
+    # Show instructions
+    whiptail --title "DuckDNS Setup" --msgbox "Please: \n\n1. Go to duckdns.org\n2. Create a new domain pointing to: $public_ip\n3. Copy your token\n\nClick OK when ready." $DIALOG_HEIGHT $DIALOG_WIDTH
+
+    # Get and validate domain
+    while true; do
+        jks_duckdns_domain=$(whiptail --title "DuckDNS Domain" --inputbox "Enter your DuckDNS domain (without .duckdns.org):" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
+        
+        [[ $? -ne 0 ]] && return 1
+        [[ "$jks_duckdns_domain" =~ $DOMAIN_PATTERN ]] && break
+        
+        whiptail --title "Error" --msgbox "Invalid domain format. Use only letters, numbers, and hyphens." 8 $DIALOG_WIDTH
+    done
+
+    # Get and validate token
+    while true; do
+        duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
+        
+        [[ $? -ne 0 ]] && return 1
+        [[ "$duckdns_token" =~ $TOKEN_PATTERN ]] && break
+        
+        whiptail --title "Error" --msgbox "Invalid token format" 8 $DIALOG_WIDTH
+    done
+
+    # Export variables and append domain
+    export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
+
+    if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
+        # Create directories
+        mkdir -p -m 750 "$DNS_CONF_DIR" || {
+            whiptail --title "Error" --msgbox "Failed to create DNS config directory" 8 $DIALOG_WIDTH
             return 1
-        fi
+        }
+
+        # Create files atomically
+        touch "$upload/${jks_duckdns_domain}.jks.tmp" && 
+        mv "$upload/${jks_duckdns_domain}.jks.tmp" "$upload/${jks_duckdns_domain}.jks" || {
+            rm -f "$upload/${jks_duckdns_domain}.jks.tmp"
+            whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
+            return 1
+        }
+
+        # Create and copy duckdns.ini with secure permissions
+        printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini.tmp" &&
+        mv "$upload/duckdns.ini.tmp" "$upload/duckdns.ini" &&
+        cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" &&
+        chmod 600 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+            rm -f "$upload/duckdns.ini.tmp" "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+            whiptail --title "Error" --msgbox "Failed to setup DuckDNS configuration" 8 $DIALOG_WIDTH
+            return 1
+        }
     else
         check_for_jks
-        return 0
     fi
-    
-    # Create duckdns.ini with token
-    echo "dns_duckdns_token=${duckdns_token}" > "$upload/duckdns.ini"
-    if [ $? -ne 0 ]; then
-        whiptail --title "Error" --msgbox "Failed to create duckdns.ini file" 8 40
-        rm -f "$upload/${jks_duckdns_domain}.jks"
-        return 1
-    fi
-  mkdir -p "$DockerEngineInstaller/config/dns-conf"
-  cp "$upload/duckdns.ini" "$swag/dns-conf/duckdns.ini"
 
     return 0
 }
