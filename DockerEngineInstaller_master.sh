@@ -146,8 +146,6 @@ duckDNS_create() {
     local readonly DIALOG_WIDTH=60
     local readonly DIALOG_HEIGHT=12
     local readonly DNS_CONF_DIR="$DockerEngineInstaller/config/dns-conf"
-    local readonly DOMAIN_PATTERN='^[a-zA-Z0-9-]+$'
-    local readonly TOKEN_PATTERN='^[a-f0-9]{32}$'
     local public_ip
 
     # Get public IP with retry
@@ -185,13 +183,8 @@ duckDNS_create() {
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
     if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
-        # Create directories
-        mkdir -p -m 750 "$DNS_CONF_DIR" || {
-            whiptail --title "Error" --msgbox "Failed to create DNS config directory" 8 $DIALOG_WIDTH
-            return 1
-        }
 
-        # Create files atomically
+        # Create files automically
         touch "$upload/${jks_duckdns_domain}.jks.tmp" && 
         mv "$upload/${jks_duckdns_domain}.jks.tmp" "$upload/${jks_duckdns_domain}.jks" || {
             rm -f "$upload/${jks_duckdns_domain}.jks.tmp"
@@ -660,28 +653,29 @@ convert_pem_to_jks() {
     local domain=$1
     local pem_dir=/usr/local/WowzaStreamingEngine/conf/ssl/archive/$domain
     local jks_dir=/usr/local/WowzaStreamingEngine/conf
-    local pkcs12_password=$4
-    local jks_password=$5
+    local pkcs12_password=$2
+    local jks_password=$3
 
-    sleep 10  # Wait for the SSL certificate to be generated
+    # Convert PEM to PKCS12 and then to JKS inside the Docker container
+    docker exec "$container_name" bash -c "
+        openssl pkcs12 -export -chain -in '$pem_dir/cert1.pem' -CAfile '$pem_dir/chain1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain'
+    "
 
-    # Convert PEM to PKCS12
-    sudo docker exec -it wse_4.9.2 bash
-    openssl pkcs12 -export -in "$pem_dir/cert1.pem" -in "$pem_dir/chain1.pem" -inkey "$pem_dir/privkey1.pem" -out "$pem_dir/$domain.p12" -name "$domain" -passout pass:$pkcs12_password
-    # Convert PKCS12 to JKS
-    cd /usr/local/WowzaStreamingEngine/jre/bin
-    keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore "$jks_dir/$domain.jks" -srckeystore "$pem_dir/$domain.p12" -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias "$domain"
+    if [ $? -eq 0 ]; then
+        echo "Successfully converted PEM to JKS"
+    else
+        echo "Error: Failed to convert PEM to JKS"
+        return 1
+    fi
 
-    echo "Successfully converted PEM to JKS"
-    exit
     return 0
 }
 
 ####
 # Function to finish SSL configuration
 finish_ssl_configuration() {
-    sudo docker cp "$upload/duckdns.ini" swag:/config/dns-conf/duckdns.ini
-    convert_pem_to_jks "$jks_domain" "$swag/etc/letsencrypt/archive/$jks_domain" "$upload" "$jks_password" "$jks_password"
+    convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
     sudo docker cp "$upload/$jks_domain.jks" "${container_name}:/usr/local/WowzaStreamingEngine/conf/"
 }
 
