@@ -84,7 +84,7 @@ fetch_and_set_wowza_versions() {
             fi
             sleep 2
             continue
-        }
+        
 
         # Process response in a single jq call
         versions+=( $(echo "$response" | jq -r '.results[] | .name') )
@@ -95,7 +95,7 @@ fetch_and_set_wowza_versions() {
     if [ ${#versions[@]} -eq 0 ]; then
         echo "Error: No versions found"
         exit 1
-    }
+    fi
 
     # Create menu items directly
     local menu_items=()
