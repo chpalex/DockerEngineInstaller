@@ -16,40 +16,7 @@ root=,black'
 
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Workflow Installer" --msgbox "
-Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine in a Docker environment.
-
-#### Key Features:
-1. **Environment Setup**
-   - Automatic Docker installation if not present
-   - Creation of required directory structure
-   - Configuration of necessary permissions
-
-2. **Wowza Configuration**
-   - Interactive version selection from Docker Hub
-   - Automated container naming and setup
-   - Secure credential management
-
-3. **Network & Security**
-   - SSL certificate configuration
-   - Integration with DuckDNS for dynamic DNS
-   - Webserver setup with auto-renewal for SSL
-
-4. **Optimization**
-   - Wowza Engine performance tuning
-   - Custom Docker image creation
-   - Environment-specific configurations
-
-5. **Deployment**
-   - Docker Compose file generation
-   - Automated container deployment
-   - Post-installation cleanup
-
-6. **Management**
-   - Provides connection instructions
-   - Setup monitoring and management tools
-   - Environment maintenance guidance
-
-This script simplifies the complex process of setting up a production-ready Wowza Streaming Engine environment with proper security, networking, and performance configurations." 75 120
+Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine, webserver and SSL in a Docker environment."
 
 #
 ## Set directory variables
