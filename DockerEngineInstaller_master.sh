@@ -680,6 +680,7 @@ convert_pem_to_jks() {
     fi
 
     echo "Successfully converted PEM to JKS"
+    exit
     return 0
 }
 
