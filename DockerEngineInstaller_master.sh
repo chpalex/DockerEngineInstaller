@@ -84,7 +84,7 @@ fetch_and_set_wowza_versions() {
             fi
             sleep 2
             continue
-        
+        fi
 
         # Process response in a single jq call
         versions+=( $(echo "$response" | jq -r '.results[] | .name') )
@@ -104,8 +104,10 @@ fetch_and_set_wowza_versions() {
     done
 
     # Calculate menu dimensions
-    local menu_height=$(( min(${#menu_items[@]} / 2 + 7, 20) ))
-    local list_height=$(( min(${#menu_items[@]} / 2, 10) ))
+    local menu_height=$(( ${#menu_items[@]} / 2 + 7 ))
+    menu_height=$(( menu_height > 20 ? 20 : menu_height ))
+    local list_height=$(( ${#menu_items[@]} / 2 ))
+    list_height=$(( list_height > 10 ? 10 : list_height ))
 
     # Select version
     engine_version=$(whiptail --title "Select Wowza Engine Version" \
@@ -113,10 +115,10 @@ fetch_and_set_wowza_versions() {
                              $menu_height 80 $list_height \
                              "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
-    [ $? -ne 0 ] || [ -z "$engine_version" ] && {
+    if [ $? -ne 0 ] || [ -z "$engine_version" ]; then
         echo "No Wowza Engine version selected, exiting."
         exit 1
-    }
+    fi
 
     # Get container name with validation
     while true; do
@@ -124,7 +126,9 @@ fetch_and_set_wowza_versions() {
                                  8 78 "wse_${engine_version}" \
                                  --title "Docker Container Name" 3>&1 1>&2 2>&3)
         
-        [ $? -ne 0 ] && container_name="wse_${engine_version}"
+        if [ $? -ne 0 ]; then
+            container_name="wse_${engine_version}"
+        fi
         
         # Validate container name
         if [[ $container_name =~ ^[a-zA-Z0-9_-]+$ ]]; then
