@@ -269,7 +269,7 @@ ssl_config() {
 
   # Capture the password for the .jks file
   while true; do
-    jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter the .jks password (if you do not have one, please enter one now):" 10 60 3>&1 1>&2 2>&3)
+    jks_password=$(whiptail --title "SSL Configuration" --passwordbox "Please enter a .jks password (if you do not have one, please create one now):" 10 60 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ] && [ -n "$jks_password" ]; then
       break
     else
@@ -604,7 +604,6 @@ services:
     labels:
       - swag=enable
     restart: unless-stopped
-
   dockerproxy:
     image: lscr.io/linuxserver/socket-proxy:latest
     container_name: dockerproxy
@@ -617,7 +616,6 @@ services:
     read_only: true
     tmpfs:
       - /run
-
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
@@ -640,15 +638,14 @@ services:
       - WSE_MGR_PASS=${WSE_MGR_PASS}
     labels:
       - swag=enable
-
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
       - 9443:9443
-      volumes:
-        - portainer_data:/data
-        - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - swag=enable
     restart: unless-stopped 
