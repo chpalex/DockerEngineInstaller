@@ -667,16 +667,42 @@ convert_pem_to_jks() {
 
     # Check if required files are present
     required_files=("cert1.pem" "privkey1.pem" "chain1.pem" "fullchain1.pem")
-    for file in "${required_files[@]}"; do
-        if [ ! -f "$pem_dir/$file" ]; then
-            echo "Error: Required file $pem_dir/$file not found"
+    timeout=60  # Timeout in seconds
+    start_time=$(date +%s)
+   
+   # Start progress bar
+    {
+    while true; do
+        all_files_present=true
+        for file in "${required_files[@]}"; do
+            if [ ! -f "$pem_dir/$file" ]; then
+                all_files_present=false
+                break
+            fi
+        done
+
+        if $all_files_present; then
+            break
+        fi
+
+        current_time=$(date +%s)
+        elapsed_time=$((current_time - start_time))
+        if [ $elapsed_time -ge $timeout ]; then
+            echo "Error: Required files not found within the timeout period"
             return 1
         fi
-    done
+        
+            # Update progress bar
+            progress=$((elapsed_time * 100 / timeout))
+            echo $progress
+            sleep 1  # Wait for 1 second before checking again
+        done
+        # Complete progress bar
+        echo 100
+     } | whiptail --gauge "Creating $domain.jks file..." 8 60 0
     
     # Convert PEM to PKCS12 and then to JKS inside the Docker container
     docker exec "$container_name" bash -c "
-        ls $pem_dir
         openssl pkcs12 -export -in '$pem_dir/cert1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
         /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' && 
         /usr/local/WowzaStreamingEngine/java/bin/keytool -import -trustcacerts -alias root -file '$pem_dir/chain1.pem' -keystore '$jks_dir/$domain.jks' -storepass $jks_password -noprompt &&
