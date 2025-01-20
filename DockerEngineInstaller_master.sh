@@ -188,6 +188,27 @@ duckDNS_create() {
           whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
           return 1
       }
+
+      # Ensure the DNS_CONF_DIR exists
+      sudo mkdir -p "$DNS_CONF_DIR"
+      # Create and copy duckdns.ini with secure permissions
+        if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
+            if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
+                sudo chmod 755 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+                    whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
+                    rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                    return 1
+                }
+            else
+                whiptail --title "Error" --msgbox "Failed to copy DuckDNS configuration" 8 $DIALOG_WIDTH
+                rm -f "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                return 1
+            fi
+        else
+            whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
+            return 1
+        fi
+
     else
        check_for_jks
     fi
