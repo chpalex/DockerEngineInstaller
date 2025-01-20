@@ -604,6 +604,7 @@ services:
     labels:
       - swag=enable
     restart: unless-stopped
+    
   dockerproxy:
     image: lscr.io/linuxserver/socket-proxy:latest
     container_name: dockerproxy
@@ -616,6 +617,7 @@ services:
     read_only: true
     tmpfs:
       - /run
+
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
@@ -635,7 +637,10 @@ services:
     environment:
       - WSE_LIC=${WSE_LIC}
       - WSE_MGR_USER=${WSE_MGR_USER}
-      - WSE_MGR_PASS=${WSE_MGR_PASS}  
+      - WSE_MGR_PASS=${WSE_MGR_PASS}
+    labels:
+      - swag=enable
+
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
@@ -644,6 +649,8 @@ services:
       volumes:
         - portainer_data:/data
         - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - swag=enable
     restart: unless-stopped 
 volumes:
   portainer_data
