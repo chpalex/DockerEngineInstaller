@@ -585,7 +585,7 @@ services:
       - TZ=\${TZ}
       - URL=\${URL}
       - VALIDATION=dns
-      - SUBDOMAINS=www, #optional
+      - SUBDOMAINS= #optional
       - CERTPROVIDER= #optional
       - DNSPLUGIN=duckdns #optional
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}
@@ -595,6 +595,7 @@ services:
       - EXTRA_DOMAINS= #optional
       - STAGING=false #optional
       - DISABLE_F2B= #optional
+      - SWAG_AUTORELOAD=true
       - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
       - ${swag}:/config
