@@ -145,7 +145,7 @@ fetch_and_set_wowza_versions() {
 duckDNS_create() {
     local readonly DIALOG_WIDTH=60
     local readonly DIALOG_HEIGHT=12
-    local DNS_CONF_DIR="$DockerEngineInstaller/config/dns-conf"
+    local DNS_CONF_DIR="$swag/dns-conf"
     local public_ip
 
     # Get public IP with retry
@@ -189,6 +189,9 @@ duckDNS_create() {
             whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
             return 1
         }
+
+        # Ensure the DNS_CONF_DIR exists
+        sudo mkdir -p "$DNS_CONF_DIR"
 
         # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
