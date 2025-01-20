@@ -598,6 +598,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
       - ${swag}:/config
+      - ./www:/config/www
     ports:
       - 444:443
       - 80:80
@@ -629,6 +630,7 @@ services:
     volumes:
       - ${volume_name}:/usr/local/WowzaStreamingEngine
       - ${swag}/etc/letsencrypt:/usr/local/WowzaStreamingEngine/conf/ssl
+      - ./www:/usr/local/WowzaStreamingEngine/www
     entrypoint: /sbin/entrypoint.sh
     env_file: 
       - ./.env
@@ -648,11 +650,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - swag=enable
-    restart: unless-stopped 
-volumes:
-  portainer_data
-  ${volume_name}:
-    external: true      
+    restart: unless-stopped    
 EOL
 
   # Run docker compose up
