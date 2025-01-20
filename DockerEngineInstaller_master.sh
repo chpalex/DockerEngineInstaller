@@ -593,7 +593,7 @@ services:
       - EMAIL= #optional
       - ONLY_SUBDOMAINS=false #optional
       - EXTRA_DOMAINS= #optional
-      - STAGING=false #optional
+      - STAGING=true #optional
       - DISABLE_F2B= #optional
       - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
@@ -604,7 +604,7 @@ services:
     labels:
       - swag=enable
     restart: unless-stopped
-    
+
   dockerproxy:
     image: lscr.io/linuxserver/socket-proxy:latest
     container_name: dockerproxy
