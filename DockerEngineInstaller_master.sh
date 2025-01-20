@@ -593,7 +593,7 @@ services:
       - EMAIL= #optional
       - ONLY_SUBDOMAINS=false #optional
       - EXTRA_DOMAINS= #optional
-      - STAGING=true #optional
+      - STAGING=false #optional
       - DISABLE_F2B= #optional
       - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
