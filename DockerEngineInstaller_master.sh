@@ -145,7 +145,7 @@ fetch_and_set_wowza_versions() {
 duckDNS_create() {
     local readonly DIALOG_WIDTH=60
     local readonly DIALOG_HEIGHT=12
-    local readonly DNS_CONF_DIR="$DockerEngineInstaller/config/dns-conf"
+    local DNS_CONF_DIR="$DockerEngineInstaller/config/dns-conf"
     local public_ip
 
     # Get public IP with retry
@@ -193,7 +193,7 @@ duckDNS_create() {
         # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 600 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+                sudo chmod 755 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
