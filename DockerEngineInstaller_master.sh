@@ -16,7 +16,7 @@ root=,black'
 
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Workflow Installer" --msgbox "
-Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine, webserver and SSL in a Docker environment." 20 75
+Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine, a simple webserver and SSL in a Docker environment." 20 75
 
 #
 ## Set directory variables
@@ -651,7 +651,7 @@ EOL
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
-  sleep 5  # Adjust the sleep time as needed
+  sleep 3  # Adjust the sleep time as needed
 
   echo "Printing docker compose logs..."
   sudo docker compose logs
@@ -720,16 +720,8 @@ convert_pem_to_jks() {
 }
 
 ####
-# Function to finish SSL configuration
-finish_ssl_configuration() {
-    convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
-    sudo docker cp "$upload/$jks_domain.jks" "${container_name}:/usr/local/WowzaStreamingEngine/conf/"
-}
-
-####
 # Function to clean up the install directory and prompt user to delete Docker images and containers
 cleanup() {
-
 echo "Cleaning up the install directory..."
 
   if [ -f "$DockerEngineInstaller/Dockerfile" ]; then
@@ -753,7 +745,7 @@ fi
 duckDNS_create
 check_for_jks # runs upload_jks, ssl_config
 create_docker_image
-check_env_prompt_credentials # runs prompt_credentials
+check_env_prompt_credentials 
 create_and_run_docker_compose
 
 # Create symlinks for Engine directories
@@ -764,7 +756,7 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
 
-finish_ssl_configuration
+convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
 
 # Add after symlinks creation
