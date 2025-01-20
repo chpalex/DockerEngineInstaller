@@ -588,7 +588,7 @@ services:
       - SUBDOMAINS=www, #optional
       - CERTPROVIDER= #optional
       - DNSPLUGIN=duckdns #optional
-      - DUCKDNSTOKEN=\${DUCKDNSTOKEN}
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
       - PROPAGATION= #optional
       - EMAIL= #optional
       - ONLY_SUBDOMAINS=false #optional
