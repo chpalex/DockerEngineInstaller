@@ -650,7 +650,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - swag=enable
-    restart: unless-stopped    
+    restart: unless-stopped
+volumes:
+  portainer_data:
+    driver: local
+  ${volume_name}:
+    driver: local
 EOL
 
   # Run docker compose up
