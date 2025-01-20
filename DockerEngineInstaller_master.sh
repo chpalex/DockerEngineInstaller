@@ -183,38 +183,16 @@ duckDNS_create() {
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
     if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
+      # Create JKS file
+      touch "$upload/${jks_duckdns_domain}.jks" || {
+          whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
+          return 1
+      }
+    else
+       check_for_jks
+    fi
 
-        # Create JKS file
-        touch "$upload/${jks_duckdns_domain}.jks" || {
-            whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
-            return 1
-        }
-
-        # Ensure the DNS_CONF_DIR exists
-        sudo mkdir -p "$DNS_CONF_DIR"
-
-        # Create and copy duckdns.ini with secure permissions
-        if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
-            if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 755 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
-                    whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
-                    rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
-                    return 1
-                }
-            else
-                whiptail --title "Error" --msgbox "Failed to copy DuckDNS configuration" 8 $DIALOG_WIDTH
-                rm -f "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
-                return 1
-            fi
-        else
-            whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
-            return 1
-        fi
-            else
-                check_for_jks
-            fi
-
-            return 0
+    return 0
 }
 
 ####
@@ -576,6 +554,7 @@ WSE_MGR_PASS=${WSE_MGR_PASS}
 WSE_LIC=${WSE_LIC}
 URL=${jks_domain}
 TZ=${tz}
+DUCKDNSTOKEN=${duckdns_token}
 EOL
 }
 
@@ -602,24 +581,41 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - DOCKER_HOST=dockerproxy
       - TZ=\${TZ}
       - URL=\${URL}
       - VALIDATION=dns
       - SUBDOMAINS=www, #optional
       - CERTPROVIDER= #optional
       - DNSPLUGIN=duckdns #optional
+      - DUCKDNSTOKEN=\${DUCKDNSTOKEN}
       - PROPAGATION= #optional
       - EMAIL= #optional
       - ONLY_SUBDOMAINS=false #optional
       - EXTRA_DOMAINS= #optional
       - STAGING=false #optional
       - DISABLE_F2B= #optional
+      - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
       - ${swag}:/config
     ports:
       - 444:443
-      - 80:80 #optional
-    restart: unless-stopped  
+      - 80:80
+    labels:
+      - swag=enable
+    restart: unless-stopped
+  dockerproxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: dockerproxy
+    environment:
+      - CONTAINERS=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /run
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
@@ -640,7 +636,17 @@ services:
       - WSE_LIC=${WSE_LIC}
       - WSE_MGR_USER=${WSE_MGR_USER}
       - WSE_MGR_PASS=${WSE_MGR_PASS}  
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - 9443:9443
+      volumes:
+        - portainer_data:/data
+        - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped 
 volumes:
+  portainer_data
   ${volume_name}:
     external: true      
 EOL
@@ -731,6 +737,10 @@ echo "Cleaning up the install directory..."
   if [ -f "$upload/tomcat.properties" ]; then
     sudo rm "$upload/tomcat.properties"
   fi
+
+  if [ -f "$upload/$jks_domain.jks" ]; then
+    sudo rm "$upload/$jks_domain.jks"
+  fi
 }
 
 ##### Start the Installation #####
@@ -761,7 +771,7 @@ cleanup
 
 # Add after symlinks creation
 whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
-- Engine install directory is mapped to a persistent volume on host OS
+- Engine install directory is mapped to a persistent volume on the host OS
 - Volume persists between container reinstalls of the same name
 - $container_dir contains links to: conf, logs, transcoder, manager, content, lib
 
