@@ -602,14 +602,13 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - DOCKER_HOST=dockerproxy
       - TZ=\${TZ}
       - URL=\${URL}
       - VALIDATION=dns
       - SUBDOMAINS= #optional
       - CERTPROVIDER= #optional
       - DNSPLUGIN=duckdns #optional
-      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
+      - DUCKDNSTOKEN=\${DUCKDNSTOKEN}
       - PROPAGATION= #optional
       - EMAIL= #optional
       - ONLY_SUBDOMAINS=false #optional
@@ -617,28 +616,13 @@ services:
       - STAGING=false #optional
       - DISABLE_F2B= #optional
       - SWAG_AUTORELOAD=true
-      - DOCKER_MODS=linuxserver/mods:universal-docker|linuxserver/mods:swag-auto-proxy
     volumes:
       - ${swag}:/config
       - ./www:/config/www
     ports:
       - 444:443
       - 80:80
-    labels:
-      - swag=enable
     restart: unless-stopped
-  dockerproxy:
-    image: lscr.io/linuxserver/socket-proxy:latest
-    container_name: dockerproxy
-    environment:
-      - CONTAINERS=1
-      - POST=0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /run
   wowza:
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
@@ -660,8 +644,6 @@ services:
       - WSE_LIC=${WSE_LIC}
       - WSE_MGR_USER=${WSE_MGR_USER}
       - WSE_MGR_PASS=${WSE_MGR_PASS}
-    labels:
-      - swag=enable
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
@@ -670,8 +652,6 @@ services:
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - swag=enable
     restart: unless-stopped
 volumes:
   portainer_data:
