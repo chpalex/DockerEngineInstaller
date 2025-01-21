@@ -726,9 +726,8 @@ convert_pem_to_jks() {
     # Convert PEM to PKCS12 and then to JKS inside the Docker container
     docker exec "$container_name" bash -c "
         openssl pkcs12 -export -in '$pem_dir/cert1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' -yes && 
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -import -trustcacerts -alias root -file '$pem_dir/chain1.pem' -keystore '$jks_dir/$domain.jks' -storepass $jks_password -yes &&
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -import -trustcacerts -alias chain -file '$pem_dir/fullchain1.pem' -keystore '$jks_dir/$domain.jks' -storepass $jks_password -yes
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' && 
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -import -trustcacerts -alias root -file '$pem_dir/chain1.pem' -keystore '$jks_dir/$domain.jks' -storepass $jks_password -noprompt &&
     "
 
     if [ $? -eq 0 ]; then
@@ -848,7 +847,8 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
 # Print instructions on how to connect to Wowza Streaming Engine Manager
 if [ -n "$jks_domain" ]; then
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager"
+  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager
+  ${yellow}Make sure to change the server from localhost to the ${w}${jks_domain} ${yellow}in the Wowza Streaming Engine Manager login page.${NOCOLOR}"
 else
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: ${w}http://$public_ip:8088/enginemanager"
   echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: ${w}http://$private_ip:8088/enginemanager${NOCOLOR}"
