@@ -687,48 +687,47 @@ convert_pem_to_jks() {
     total_files=${#required_files[@]}
     files_found=0
 
-    # Start progress bar
-    {
-        while true; do
-            all_files_present=true
-            files_found=0
-            for file in "${required_files[@]}"; do
-                if [ -f "$pem_dir/$file" ]; then
-                    files_found=$((files_found + 1))
-                else
-                    all_files_present=false
-                fi
-            done
+    # Check if required files are present
+    required_files=("cert1.pem" "privkey1.pem" "chain1.pem" "fullchain1.pem")
+    timeout=120  # Timeout in seconds
+    start_time=$(date +%s)
+    total_files=${#required_files[@]}
+    files_found=0
 
-            if $all_files_present; then
-              echo "Required files found"
-              break
+    echo "Checking for required files..."
+
+    while true; do
+        all_files_present=true
+        files_found=0
+        for file in "${required_files[@]}"; do
+            if [ -f "$pem_dir/$file" ]; then
+                files_found=$((files_found + 1))
+            else
+                all_files_present=false
             fi
-
-            current_time=$(date +%s)
-            elapsed_time=$((current_time - start_time))
-            if [ $elapsed_time -ge $timeout ]; then
-                echo "Error: Required files not found within the timeout period"
-                return 1
-            fi
-
-            # Update progress bar
-            time_progress=$((elapsed_time * 100 / timeout))
-            file_progress=$((files_found * 100 / total_files))
-            progress=$(( (time_progress + file_progress) / 2 ))
-            echo $progress
-            sleep 1  # Wait for 1 second before checking again
         done
 
-        # Complete progress bar
-        echo 100
-    } | whiptail --gauge "Creating $domain.jks file..." 8 60 0
+        if $all_files_present; then
+            echo "Required files found"
+            break
+        fi
+
+        current_time=$(date +%s)
+        elapsed_time=$((current_time - start_time))
+        if [ $elapsed_time -ge $timeout ]; then
+            echo "Error: Required files not found within the timeout period"
+            return 1
+        fi
+
+        # Update echo timer
+        echo "Elapsed time: $elapsed_time seconds. Files found: $files_found/$total_files"
+        sleep 1  # Wait for 1 second before checking again
+    done
     
     # Convert PEM to PKCS12 and then to JKS inside the Docker container
     docker exec "$container_name" bash -c "
-        openssl pkcs12 -export -in '$pem_dir/cert1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' && 
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -import -trustcacerts -alias root -file '$pem_dir/chain1.pem' -keystore '$jks_dir/$domain.jks' -storepass $jks_password -noprompt
+        openssl pkcs12 -export -in '$pem_dir/fullchain1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain'
     "
 
     if [ $? -eq 0 ]; then
