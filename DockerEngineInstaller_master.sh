@@ -175,10 +175,15 @@ duckDNS_create() {
     while true; do
         duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
         
-        [[ $? -ne 0 ]] && return 1
-        break
+        if [[ $? -ne 0 ]]; then
+            return 1
+        elif [[ -z "$duckdns_token" ]]; then
+            whiptail --title "Error" --msgbox "DuckDNS token is required. Please enter a valid token." 8 $DIALOG_WIDTH
+        else
+            break
+        fi
     done
-
+    
     # Export variables and append domain
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
