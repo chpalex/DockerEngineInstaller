@@ -556,6 +556,16 @@ prompt_credentials() {
       exit 1
     fi
   fi
+
+    SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
+  if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
+    whiptail --msgbox "Email address required. Please try again." 8 78 --title "Error"
+    SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certifiacet:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
+      echo "No email provided, exiting install process" >&2
+      exit 1
+    fi
+  fi
 }
 
 check_env_prompt_credentials() {
@@ -581,6 +591,7 @@ WSE_LIC=${WSE_LIC}
 URL=${jks_domain}
 TZ=${tz}
 DUCKDNSTOKEN=${duckdns_token}
+EMAIL=${SSL_EMAIL}
 EOL
 }
 
@@ -592,7 +603,6 @@ create_and_run_docker_compose() {
   if ! docker volume ls --format '{{.Name}}' | grep -q "^${volume_name}$"; then
     docker volume create "${volume_name}"
   fi
-
 
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
@@ -611,11 +621,11 @@ services:
       - URL=\${URL}
       - VALIDATION=dns
       - SUBDOMAINS= #optional
-      - CERTPROVIDER= #optional
+      - CERTPROVIDER=zerossl #optional
       - DNSPLUGIN=duckdns #optional
       - DUCKDNSTOKEN=\${DUCKDNSTOKEN}
       - PROPAGATION= #optional
-      - EMAIL= #optional
+      - EMAIL=\${EMAIL} #optional
       - ONLY_SUBDOMAINS=false #optional
       - EXTRA_DOMAINS= #optional
       - STAGING=false #optional
@@ -654,6 +664,7 @@ services:
     container_name: portainer
     ports:
       - 9443:9443
+      - 8000:8000
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
