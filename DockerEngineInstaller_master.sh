@@ -194,7 +194,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 755 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
