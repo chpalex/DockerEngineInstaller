@@ -682,7 +682,7 @@ convert_pem_to_jks() {
 
     # Check if required files are present
     required_files=("cert1.pem" "privkey1.pem" "chain1.pem" "fullchain1.pem")
-    timeout=60  # Timeout in seconds
+    timeout=120  # Timeout in seconds
     start_time=$(date +%s)
     total_files=${#required_files[@]}
     files_found=0
@@ -701,7 +701,8 @@ convert_pem_to_jks() {
             done
 
             if $all_files_present; then
-                break
+              echo "Required files found"
+              break
             fi
 
             current_time=$(date +%s)
@@ -733,7 +734,7 @@ convert_pem_to_jks() {
     if [ $? -eq 0 ]; then
         echo "Successfully converted PEM to JKS"
     else
-        echo "Error: Failed to convert PEM to JKS"
+        echo "Error: Failed to convert PEM to JKS. Please check the $swag/log/letsencrypt/letsencrypt.log file for more information"
         return 1
     fi
 
