@@ -789,8 +789,6 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
 
-
-
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${yellow}Congratulations on successfully installing Wowza Streaming Engine, SWAG, and Portainer!${NOCOLOR}"
 echo -e "${w}To access the Wowza Streaming Engine Manager, go to: ${white}https://$jks_domain:8090/enginemanager${NOCOLOR}"
@@ -801,7 +799,7 @@ echo -e "${w}To manage files in Wowza Engine directories, use the following syml
 2. Copy files out:
    sudo cp Engine_xxxx/[file_name] [file_name]
 
-3. Copy files back:
+3. Copy files in:
    sudo cp [file_name] Engine_xxxx/[file_name]
 
 ${w}NOTE: Container must be restarted for changes to take effect:
@@ -826,9 +824,6 @@ echo -e "
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash
 "
-
-# Get the public IP address
-public_ip=$(curl -s ifconfig.me)
 
 # Get the private IP address
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
