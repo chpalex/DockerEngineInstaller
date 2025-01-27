@@ -789,13 +789,12 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
 
-# Add after symlinks creation
-whiptail --title "Engine Directory Management" --msgbox "Volume Mapping Information:
-- Engine install directory is mapped to a persistent volume on the host OS
-- Volume persists between container reinstalls of the same name
-- $container_dir contains links to: conf, logs, transcoder, manager, content, lib
 
-File Management:
+
+# Print instructions on how to use the Wowza Streaming Engine Docker container
+echo -e "${yellow}Congratulations on successfully installing Wowza Streaming Engine, SWAG, and Portainer!${NOCOLOR}"
+echo -e "${w}To access the Wowza Streaming Engine Manager, go to: ${white}https://$jks_domain:8090/enginemanager${NOCOLOR}"
+echo -e "${w}To manage files in Wowza Engine directories, use the following symlinks in the $container_dir directory:
 1. Edit files directly:
    sudo nano Engine_xxxx/[file_name]
 
@@ -805,11 +804,15 @@ File Management:
 3. Copy files back:
    sudo cp [file_name] Engine_xxxx/[file_name]
 
-NOTE: Container must be restarted for changes to take effect:
-  cd $container_dir && sudo docker compose stop
-  cd $container_dir && sudo docker compose start" 30 100
+${w}NOTE: Container must be restarted for changes to take effect:
+   ${white}cd $container_dir && sudo docker compose stop && sudo docker compose start && cd $SCRIPT_DIR${NOCOLOR}
+"
+echo -e "${w}To access the webserver, go to: ${white}https://$public_ip${NOCOLOR}"
+echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
 
-# Print instructions on how to use the Wowza Streaming Engine Docker container
+echo -e "${w}To access the Portainer web interface, go to: ${white}https://$public_ip:9443${NOCOLOR}"
+
+
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR
 
@@ -823,41 +826,15 @@ echo -e "
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash
 "
-echo -e "${w}
-* Engine install directory is mapped to a persistent volume on host OS
-* Volume persists between container reinstalls of the same name
-* $container_dir contains links to: ${NOCOLOR}conf, logs, transcoder, manager, content, lib
 
-${w}File Management:
-1. Edit files directly:
-   sudo nano Engine_xxxx/[file_name]
-
-2. Copy files out:
-   sudo cp Engine_xxxx/[file_name] [file_name]
-
-3. Copy files back:
-   sudo cp [file_name] Engine_xxxx/[file_name]
-
-${w}NOTE: Container must be restarted for changes to take effect:
-   ${white}cd $container_dir && sudo docker compose stop && sudo docker compose start && cd $SCRIPT_DIR
-
-${w}NOTE: To remove a volume:
-   ${white}sudo docker volume rm volume_for_$container_name${NOCOLOR}
-"
 # Get the public IP address
 public_ip=$(curl -s ifconfig.me)
 
 # Get the private IP address
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
 
-# Print instructions on how to connect to Wowza Streaming Engine Manager
-if [ -n "$jks_domain" ]; then
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager over SSL, go to: ${w}https://${jks_domain}:8090/enginemanager
-  ${yellow}Make sure to change the server from localhost to the ${w}${jks_domain} ${yellow}in the Wowza Streaming Engine Manager login page.${NOCOLOR}"
-else
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via public IP, go to: ${w}http://$public_ip:8088/enginemanager"
-  echo -e "${yellow}To connect to Wowza Streaming Engine Manager via private IP, go to: ${w}http://$private_ip:8088/enginemanager${NOCOLOR}"
-fi
+  echo -e "${yellow}To connect via IP, use the public IP: $public_ip or private IP $private_ip"
+
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
 fi
