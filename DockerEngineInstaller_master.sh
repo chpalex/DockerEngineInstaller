@@ -183,7 +183,7 @@ duckDNS_create() {
             break
         fi
     done
-    
+
     # Export variables and append domain
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
@@ -692,7 +692,7 @@ convert_pem_to_jks() {
     total_files=${#required_files[@]}
     files_found=0
 
-    # Check if required files are present
+   # Check if required files are present inside the Docker container
     required_files=("cert1.pem" "privkey1.pem" "chain1.pem" "fullchain1.pem")
     timeout=120  # Timeout in seconds
     start_time=$(date +%s)
@@ -705,7 +705,7 @@ convert_pem_to_jks() {
         all_files_present=true
         files_found=0
         for file in "${required_files[@]}"; do
-            if [ -f "$pem_dir/$file" ]; then
+            if docker exec "$container_name" test -f "$pem_dir/$file"; then
                 files_found=$((files_found + 1))
             else
                 all_files_present=false
@@ -713,19 +713,19 @@ convert_pem_to_jks() {
         done
 
         if $all_files_present; then
-            echo "Required files found"
+            echo -ne "\rRequired files found"
             break
         fi
 
         current_time=$(date +%s)
         elapsed_time=$((current_time - start_time))
         if [ $elapsed_time -ge $timeout ]; then
-            echo "Error: Required files not found within the timeout period"
+            echo -ne "\rError: Required files not found within the timeout period"
             return 1
         fi
 
-        # Update echo timer
-        echo "Elapsed time: $elapsed_time seconds. Files found: $files_found/$total_files"
+        # Update echo timer on the same line
+        echo -ne "\rElapsed time: $elapsed_time seconds. Files found: $files_found/$total_files"
         sleep 1  # Wait for 1 second before checking again
     done
     
