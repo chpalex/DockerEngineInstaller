@@ -667,7 +667,7 @@ services:
 volumes:
   portainer_data:
     driver: local
-  ${volume_name}:
+  engine:
     driver: local
 EOL
 
