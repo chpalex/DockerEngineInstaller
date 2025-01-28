@@ -202,7 +202,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
@@ -216,9 +216,8 @@ duckDNS_create() {
             whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
             return 1
         fi
-
     else
-      ssl_config "$jks_file"
+      
     fi
 
     return 0
@@ -288,7 +287,7 @@ ssl_config() {
   # Extract the base name of the jks_file
   jks_file=$(basename "$1")
 
-  # Check if the jks_file variable contains the word "streamlock"
+  # Check if the jks_file variable contains the word "streamlock or duckdns"
   if [[ "$jks_file" == *"streamlock"* ]]; then
     jks_domain="${jks_file%.jks}"
   elif [[ "$jks_file" == *"duckdns"* ]]; then
