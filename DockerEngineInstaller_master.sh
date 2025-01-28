@@ -763,6 +763,18 @@ convert_pem_to_jks() {
 }
 
 ####
+# Function to install Swagger UI
+install_swagger() {
+  # Download Swagger UI from Wowza
+  cd "$container_dir/www"
+  wget https://www.wowza.com/downloads/forums/restapidocumentation/RESTAPIDocumentationWebpage.zip
+  unzip RESTAPIDocumentationWebpage.zip -d swagger
+
+  # Replace the URL in the swagger/index.html file
+  sed -i "s|http://localhost:8089/api-docs|https://$jks_domain:8089/api-docs|g" swagger/index.html
+}
+
+####
 # Function to clean up the install directory and prompt user to delete Docker images and containers
 cleanup() {
 echo "Cleaning up the install directory..."
@@ -779,6 +791,119 @@ echo "Cleaning up the install directory..."
     sudo rm "$upload/$jks_domain.jks"
   fi
 }
+
+####
+# Function to create HTML instructions
+create_html_instructions() {
+  # Create HTML instructions
+  cat <<EOL > "$container_dir/instructions.html"
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WSE SWAG Portainer in Docker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #ff6600;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #ff6600;
+    }
+    p, ul {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a {
+      color: #ff6600;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .logo {
+      width: 50px;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wowza Streaming Engine in Docker</h1>
+  </header>
+  <div class="container">
+    <div class="section">
+      <h2>Wowza Streaming Engine</h2>
+      <img src="https://www.wowza.com/assets/images/wowza-logo.png" alt="Wowza Logo" class="logo">
+      <p>Welcome to Wowza Streaming Engine!</p>
+      <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8089">https://$jks_domain:8089</a></p>
+      <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:8089/swagger">https://$jks_domain:8089/swagger</a></p>
+      <p>To manage the Engine files, use the following symlinks in the $container_dir directory:</p>
+      <ul>
+        <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
+        <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
+        <li>Copy files in: <code>sudo cp [file_name] Engine_xxxx/[file_name]</code></li>
+      </ul>
+      <p>NOTE: Container must be restarted for changes to take effect:</p>
+      <p>To manage the state of the docker containers, use the following commands:</p>
+      <ul>
+        <li>Stop and destroy the Docker Wowza container: <code>cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR</code></li>
+        <li>Stop the container without destroying it: <code>cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR</code></li>
+        <li>Start the container after stopping it: <code>cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR</code></li>
+      </ul>
+      <p>To delete volumes, use the following command:</p>
+      <ul>
+        <li><code>sudo docker volume ls</code></li>
+        <li><code>sudo docker volume rm "volume name"</code></li>
+      </ul>
+      <p>To access the container directly, type: <code>sudo docker exec -it $container_name bash</code></p>
+    </div>
+
+    <div class="section">
+      <h2>Portainer</h2>
+      <img src="https://www.portainer.io/hubfs/portainer-logo.png" alt="Portainer Logo" class="logo">
+      <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443">https://$jks_domain:9443</a></p>
+      <p>Portainer is a lightweight management UI which allows you to easily manage your Docker host.</p>
+      <p>For more information, visit the <a href="https://www.portainer.io/">Portainer website</a>.</p>
+    </div>
+
+    <div class="section">
+      <h2>SWAG</h2>
+      <img src="https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/swag.png" alt="SWAG Logo" class="logo">
+      <p>Access the SWAG webserver at: <a href="https://$jks_domain:444">https://$jks_domain:444</a></p>
+      <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
+      <p>To manage the webserver and pages you can access the files in $container_dir/www</p>
+      <p>For more information, visit the <a href="https://hub.docker.com/r/linuxserver/swag">SWAG Docker Hub</a>.</p>
+    </div>
+  </div>
+</body>
+</html>
+EOL
+}
+
+# Get the private IP address
+private_ip=$(ip route get 1 | awk '{print $7;exit}')
+   # Get public IP with retry
+    for i in {1..3}; do
+        public_ip=$(curl -s -f https://api.ipify.org)
+        [[ $? -eq 0 && -n "$public_ip" ]] && break
+        sleep 2
+    done
 
 ##### Start the Installation #####
 install_docker
@@ -805,53 +930,13 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
+install_swagger
 cleanup
+create_html_instructions
 
-# Get the private IP address
-private_ip=$(ip route get 1 | awk '{print $7;exit}')
-   # Get public IP with retry
-    for i in {1..3}; do
-        public_ip=$(curl -s -f https://api.ipify.org)
-        [[ $? -eq 0 && -n "$public_ip" ]] && break
-        sleep 2
-    done
+echo -e "For instructions on using the installed software, please visit https://$jks_domain:444/instructions.html"
 
-# Print instructions on how to use the Wowza Streaming Engine Docker container
-echo -e "${yellow}Congratulations on successfully installing Wowza Streaming Engine, SWAG, and Portainer!${NOCOLOR}"
-echo -e "${w}To access the Wowza Streaming Engine Manager, go to: ${white}https://$jks_domain:8090/enginemanager${NOCOLOR}"
-echo -e "${w}To manage files in Wowza Engine directories, use the following symlinks in the $container_dir directory:
-1. Edit files directly:
-   sudo nano Engine_xxxx/[file_name]
-
-2. Copy files out:
-   sudo cp Engine_xxxx/[file_name] [file_name]
-
-3. Copy files in:
-   sudo cp [file_name] Engine_xxxx/[file_name]
-
-${w}NOTE: Container must be restarted for changes to take effect:
-   ${white}cd $container_dir && sudo docker compose stop && sudo docker compose start && cd $SCRIPT_DIR${NOCOLOR}
-"
-echo -e "${w}To access the webserver, go to: ${white}https://$jks_domain:444${NOCOLOR}"
-echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
-
-echo -e "${w}To access the Portainer web interface, go to: ${white}https://$jks_domain:9443${NOCOLOR}"
-
-echo -e "${w}To stop and destroy the Docker Wowza container, type:
-${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR
-
-${w}To stop the container without destroying it, type:
-${white}cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR
-
-${w}To start the container after stopping it, type:
-${white}cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR
-"
-echo -e "
-${w}To access the container directly, type:
-${white}sudo docker exec -it $container_name bash
-"
-echo -e "${yellow}To connect via IP, use the public IP: $public_ip or private IP $private_ip"
-
+# Prompt user to delete installer script
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
 fi
