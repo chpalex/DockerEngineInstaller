@@ -769,6 +769,7 @@ install_swagger() {
   cd "$container_dir/www"
   wget https://www.wowza.com/downloads/forums/restapidocumentation/RESTAPIDocumentationWebpage.zip
   unzip RESTAPIDocumentationWebpage.zip -d swagger
+  rm RESTAPIDocumentationWebpage.zip
 
   # Replace the URL in the swagger/index.html file
   sed -i "s|http://localhost:8089/api-docs|https://$jks_domain:8089/api-docs|g" swagger/index.html
@@ -796,7 +797,7 @@ echo "Cleaning up the install directory..."
 # Function to create HTML instructions
 create_html_instructions() {
   # Create HTML instructions
-  cat <<EOL > "$container_dir/instructions.html"
+  cat <<EOL > "$container_dir/www/instructions.html"
 <!DOCTYPE html>
 <html>
 <head>
@@ -818,7 +819,10 @@ create_html_instructions() {
     .container {
       padding: 20px;
     }
-    h1, h2 {
+    h1 {
+      color: #f9f9f9;
+    }    
+    h2 {
       color: #ff6600;
     }
     p, ul {
@@ -844,16 +848,15 @@ create_html_instructions() {
 </head>
 <body>
   <header>
-    <h1>Wowza Streaming Engine in Docker</h1>
+    <h1>Wowza Streaming Engine, SWAG and Portainer in Docker</h1>
   </header>
   <div class="container">
     <div class="section">
       <h2>Wowza Streaming Engine</h2>
-      <img src="https://www.wowza.com/assets/images/wowza-logo.png" alt="Wowza Logo" class="logo">
-      <p>Welcome to Wowza Streaming Engine!</p>
-      <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8089">https://$jks_domain:8089</a></p>
-      <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:8089/swagger">https://$jks_domain:8089/swagger</a></p>
-      <p>To manage the Engine files, use the following symlinks in the $container_dir directory:</p>
+      <img src="https://www.wowza.com/wp-content/uploads/Graphics-Social-Profile-Images-Logo-WhiteBG-1024x512-1.png" alt="Wowza Logo" class="logo">
+      <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8090 target="_blank">https://$jks_domain:8090</a></p>
+      <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:444/swagger target="_blank">https://$jks_domain:444/swagger</a></p>
+      <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
       <ul>
         <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
         <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
@@ -871,24 +874,27 @@ create_html_instructions() {
         <li><code>sudo docker volume ls</code></li>
         <li><code>sudo docker volume rm "volume name"</code></li>
       </ul>
-      <p>To access the container directly, type: <code>sudo docker exec -it $container_name bash</code></p>
+      <p>To access the container directly, type: 
+      <ul>
+        <li><code>sudo docker exec -it $container_name bash</code></li>
+      </ul>
     </div>
 
     <div class="section">
       <h2>Portainer</h2>
-      <img src="https://www.portainer.io/hubfs/portainer-logo.png" alt="Portainer Logo" class="logo">
-      <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443">https://$jks_domain:9443</a></p>
+      <img src="https://www.portainer.io/hubfs/portainer-logo-black.svg" alt="Portainer Logo" class="logo">
+      <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443 target="_blank">https://$jks_domain:9443</a></p>
       <p>Portainer is a lightweight management UI which allows you to easily manage your Docker host.</p>
-      <p>For more information, visit the <a href="https://www.portainer.io/">Portainer website</a>.</p>
+      <p>For more information, visit the <a href="https://www.portainer.io/ target="_blank">Portainer website</a>.</p>
     </div>
 
     <div class="section">
       <h2>SWAG</h2>
-      <img src="https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/swag.png" alt="SWAG Logo" class="logo">
-      <p>Access the SWAG webserver at: <a href="https://$jks_domain:444">https://$jks_domain:444</a></p>
+      <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
+      <p>Access the SWAG webserver at: <a href="https://$jks_domain:444 target="_blank">https://$jks_domain:444</a></p>
       <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
-      <p>To manage the webserver and pages you can access the files in $container_dir/www</p>
-      <p>For more information, visit the <a href="https://hub.docker.com/r/linuxserver/swag">SWAG Docker Hub</a>.</p>
+      <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
+      <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag target="_blank">SWAG github</a>.</p>
     </div>
   </div>
 </body>
@@ -934,7 +940,7 @@ install_swagger
 cleanup
 create_html_instructions
 
-echo -e "For instructions on using the installed software, please visit https://$jks_domain:444/instructions.html"
+echo -e "${w}For instructions on using the installed software, please visit https://$jks_domain:444/instructions.html${NOCOLOR}"
 
 # Prompt user to delete installer script
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
