@@ -800,6 +800,9 @@ sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$conta
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
 
+# Get the private IP address
+private_ip=$(ip route get 1 | awk '{print $7;exit}')
+
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${yellow}Congratulations on successfully installing Wowza Streaming Engine, SWAG, and Portainer!${NOCOLOR}"
 echo -e "${w}To access the Wowza Streaming Engine Manager, go to: ${white}https://$jks_domain:8090/enginemanager${NOCOLOR}"
@@ -816,7 +819,7 @@ echo -e "${w}To manage files in Wowza Engine directories, use the following syml
 ${w}NOTE: Container must be restarted for changes to take effect:
    ${white}cd $container_dir && sudo docker compose stop && sudo docker compose start && cd $SCRIPT_DIR${NOCOLOR}
 "
-echo -e "${w}To access the webserver, go to: ${white}https://$public_ip${NOCOLOR}"
+echo -e "${w}To access the webserver, go to: ${white}https://$jks_domain:444${NOCOLOR}"
 echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
 
 echo -e "${w}To access the Portainer web interface, go to: ${white}https://$public_ip:9443${NOCOLOR}"
@@ -835,11 +838,7 @@ echo -e "
 ${w}To access the container directly, type:
 ${white}sudo docker exec -it $container_name bash
 "
-
-# Get the private IP address
-private_ip=$(ip route get 1 | awk '{print $7;exit}')
-
-  echo -e "${yellow}To connect via IP, use the public IP: $public_ip or private IP $private_ip"
+echo -e "${yellow}To connect via IP, use the public IP: $public_ip or private IP $private_ip"
 
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
