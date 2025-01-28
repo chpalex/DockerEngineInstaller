@@ -598,8 +598,6 @@ EOL
 ####
 # Function to create docker-compose.yml and run docker compose up
 create_and_run_docker_compose() {
-  # set the volume name
-  volume_name="volume_for_${container_name}"
 
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
@@ -646,7 +644,7 @@ services:
       - "554:554"
       - "8084-8090:8084-8090/tcp"
     volumes:
-      - ${volume_name}:/usr/local/WowzaStreamingEngine
+      - engine:/usr/local/WowzaStreamingEngine
       - ${swag}/etc/letsencrypt:/usr/local/WowzaStreamingEngine/conf/ssl
       - ./www:/usr/local/WowzaStreamingEngine/www
     entrypoint: /sbin/entrypoint.sh
@@ -661,7 +659,7 @@ services:
     container_name: portainer
     ports:
       - 9443:9443
-      - 8000:8000
+      - 8000:9000
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -740,7 +738,9 @@ convert_pem_to_jks() {
     # Convert PEM to PKCS12 and then to JKS inside the Docker container
     docker exec "$container_name" bash -c "
         openssl pkcs12 -export -in '$pem_dir/fullchain1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' -noprompt
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' -noprompt &&
+        service WowzaStreamingEngine restart &&
+        service WowzaStreamingEngineManager restart
     "
 
     if [ $? -eq 0 ]; then
@@ -787,12 +787,13 @@ check_env_prompt_credentials
 create_and_run_docker_compose
 
 # Create symlinks for Engine directories
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/conf/ $container_dir/Engine_conf
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/logs/ $container_dir/Engine_logs
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/content/ $container_dir/Engine_content
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/transcoder/ $container_dir/Engine_transcoder
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/manager/ $container_dir/Engine_manager
-sudo ln -sf /var/lib/docker/volumes/volume_for_$container_name/_data/lib /$container_dir/Engine_lib
+engine_volumes=$(sudo docker volume ls --format '{{.Name}}' | grep '_engine')
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/conf/ $container_dir/Engine_conf
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/logs/ $container_dir/Engine_logs
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/content/ $container_dir/Engine_content
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/transcoder/ $container_dir/Engine_transcoder
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/manager/ $container_dir/Engine_manager
+sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/lib /$container_dir/Engine_lib
 
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
@@ -825,7 +826,7 @@ ${w}NOTE: Container must be restarted for changes to take effect:
 echo -e "${w}To access the webserver, go to: ${white}https://$jks_domain:444${NOCOLOR}"
 echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
 
-echo -e "${w}To access the Portainer web interface, go to: ${white}https://$public_ip:9443${NOCOLOR}"
+echo -e "${w}To access the Portainer web interface, go to: ${white}http://$public_ip:8000${NOCOLOR}"
 
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR
