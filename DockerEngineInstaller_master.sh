@@ -215,29 +215,44 @@ duckDNS_create() {
         fi
 
     else
-       check_for_jks
+      jks_file="$upload/${jks_duckdns_domain}.jks"
+      ssl_config "$jks_file"
     fi
 
     return 0
 }
 
 ####
-# Function to scan for .jks file
+# Function to scan for .jks file and handle SSL configuration
 check_for_jks() {
-  whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration\nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
+  # Step 1: Ask user if they want to use SSL
+  if ! whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
+    create_docker_image
+    return
+  fi
 
-  # Find all .jks files
+  whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration... \nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
+
+  # Step 2: Find all .jks files
   jks_files=($(ls "$upload"/*.jks 2>/dev/null))
   if [ ${#jks_files[@]} -eq 0 ]; then
     whiptail --title "SSL Configuration" --msgbox "No .jks file/s found." 10 60
-    upload_jks
+    if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
+      upload_jks
+    else
+      duckDNS_create
+    fi
   else
     if [ ${#jks_files[@]} -eq 1 ]; then
       jks_file="${jks_files[0]}"
       if whiptail --title "JKS File/s Detected" --yesno "A .jks file $(basename "$jks_file") was detected. Do you want to use this file?" 10 60; then
         ssl_config "$jks_file"
       else
-        upload_jks
+        if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
+          upload_jks
+        else
+          duckDNS_create
+        fi
       fi
     else
       # Create a radiolist with the list of .jks files
@@ -789,9 +804,6 @@ echo "Cleaning up the install directory..."
     sudo rm "$upload/tomcat.properties"
   fi
 
-  if [ -f "$upload/$jks_domain.jks" ]; then
-    sudo rm "$upload/$jks_domain.jks"
-  fi
 }
 
 ####
@@ -921,8 +933,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-duckDNS_create
-check_for_jks # runs upload_jks, ssl_config
+check_for_jks # runs upload_jks, ssl_config, duckDNS_create
 create_docker_image
 check_env_prompt_credentials 
 create_and_run_docker_compose
