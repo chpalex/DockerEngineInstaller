@@ -598,11 +598,8 @@ EOL
 ####
 # Function to create docker-compose.yml and run docker compose up
 create_and_run_docker_compose() {
-  # Check if the volume exists, create it if it doesn't
+  # set the volume name
   volume_name="volume_for_${container_name}"
-  if ! docker volume ls --format '{{.Name}}' | grep -q "^${volume_name}$"; then
-    docker volume create "${volume_name}"
-  fi
 
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
@@ -673,7 +670,7 @@ volumes:
   portainer_data:
     driver: local
   ${volume_name}:
-    external: true
+    driver: local
 EOL
 
   # Run docker compose up
@@ -802,6 +799,12 @@ cleanup
 
 # Get the private IP address
 private_ip=$(ip route get 1 | awk '{print $7;exit}')
+   # Get public IP with retry
+    for i in {1..3}; do
+        public_ip=$(curl -s -f https://api.ipify.org)
+        [[ $? -eq 0 && -n "$public_ip" ]] && break
+        sleep 2
+    done
 
 # Print instructions on how to use the Wowza Streaming Engine Docker container
 echo -e "${yellow}Congratulations on successfully installing Wowza Streaming Engine, SWAG, and Portainer!${NOCOLOR}"
@@ -823,7 +826,6 @@ echo -e "${w}To access the webserver, go to: ${white}https://$jks_domain:444${NO
 echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
 
 echo -e "${w}To access the Portainer web interface, go to: ${white}https://$public_ip:9443${NOCOLOR}"
-
 
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR
