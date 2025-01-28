@@ -897,7 +897,7 @@ create_html_instructions() {
       <h2>Portainer</h2>
       <img src="https://w7.pngwing.com/pngs/112/58/png-transparent-portainer-wordmark-hd-logo.png" alt="Portainer Logo" class="logo">
       <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443" target="_blank">https://$jks_domain:9443</a></p>
-      <p>Portainer is a lightweight management UI which allows you to easily manage your Docker host.</p>
+      <p>Portainer is a lightweight docker management UI that allows you to easily manage your Docker containers, images, networks, and volumes.</p>
       <p>For more information, visit the <a href="https://www.portainer.io" target="_blank">Portainer website</a>.</p>
     </div>
 
