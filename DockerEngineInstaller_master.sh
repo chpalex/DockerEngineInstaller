@@ -634,6 +634,9 @@ services:
       - 80:80
     restart: unless-stopped
   wowza:
+    depends_on:
+      swag:
+        condition: service_healthy
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
     restart: always
@@ -655,14 +658,22 @@ services:
       - WSE_MGR_USER=${WSE_MGR_USER}
       - WSE_MGR_PASS=${WSE_MGR_PASS}
   portainer:
+    depends_on:
+      swag:
+        condition: service_healthy
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
       - 9443:9443
       - 8000:9000
     volumes:
+      - ${swag}/etc/letsencrypt/live/$jks_domain:/certs/live/$jks_domain:ro
+      - ${swag}/etc/letsencrypt/archive/$jks_domain:/certs/archive/$jks_domain:ro
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
+    command: |-
+      --sslcert /certs/live/$jks_domain/fullchain.pem
+      --sslkey /certs/live/$jks_domain/privkey.pem
     restart: unless-stopped
 volumes:
   portainer_data:
@@ -738,11 +749,9 @@ convert_pem_to_jks() {
     # Convert PEM to PKCS12 and then to JKS inside the Docker container
     docker exec "$container_name" bash -c "
         openssl pkcs12 -export -in '$pem_dir/fullchain1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
-        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' -noprompt &&
-        service WowzaStreamingEngine restart &&
-        service WowzaStreamingEngineManager restart
+        /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -deststorepass $jks_password -destkeypass $jks_password -destkeystore '$jks_dir/$domain.jks' -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -alias '$domain' -noprompt
     "
-
+    sudo docker compose restart 
     if [ $? -eq 0 ]; then
         echo "Successfully converted PEM to JKS"
     else
@@ -826,7 +835,7 @@ ${w}NOTE: Container must be restarted for changes to take effect:
 echo -e "${w}To access the webserver, go to: ${white}https://$jks_domain:444${NOCOLOR}"
 echo -e "${w}To manage the webservers you can access the files in ${white}$container_dir/www${NOCOLOR}"
 
-echo -e "${w}To access the Portainer web interface, go to: ${white}http://$public_ip:8000${NOCOLOR}"
+echo -e "${w}To access the Portainer web interface, go to: ${white}https://$jks_domain:9443${NOCOLOR}"
 
 echo -e "${w}To stop and destroy the Docker Wowza container, type:
 ${white}cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR
