@@ -216,8 +216,6 @@ duckDNS_create() {
             whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
             return 1
         fi
-    else
-      
     fi
 
     return 0
