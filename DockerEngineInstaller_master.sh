@@ -636,7 +636,7 @@ services:
   wowza:
     depends_on:
       swag:
-        condition: service_healthy
+        condition: service_started
     image: docker.io/library/wowza_engine:${engine_version}
     container_name: ${container_name}
     restart: always
@@ -660,7 +660,7 @@ services:
   portainer:
     depends_on:
       swag:
-        condition: service_healthy
+        condition: service_started
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
