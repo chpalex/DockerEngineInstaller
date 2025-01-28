@@ -787,13 +787,13 @@ check_env_prompt_credentials
 create_and_run_docker_compose
 
 # Create symlinks for Engine directories
-engine_volumes=$(sudo docker volume ls --format '{{.Name}}' | grep '_engine')
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/conf/ $container_dir/Engine_conf
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/logs/ $container_dir/Engine_logs
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/content/ $container_dir/Engine_content
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/transcoder/ $container_dir/Engine_transcoder
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/manager/ $container_dir/Engine_manager
-sudo ln -sf /var/lib/docker/volumes/volume_for_$engine_volume/_data/lib /$container_dir/Engine_lib
+engine_volume=$(sudo docker volume ls --format '{{.Name}}' | grep '_engine')
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/conf/ $container_dir/Engine_conf
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/logs/ $container_dir/Engine_logs
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/content/ $container_dir/Engine_content
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/transcoder/ $container_dir/Engine_transcoder
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir/Engine_manager
+sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
 convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 cleanup
