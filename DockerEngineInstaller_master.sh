@@ -141,6 +141,64 @@ fetch_and_set_wowza_versions() {
 }
 
 ####
+# Function to scan for .jks file and handle SSL configuration
+check_for_jks() {
+  # Step 1: Ask user if they want to use SSL
+  if ! whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
+    create_docker_image
+    return
+  fi
+
+  whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration... \nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
+
+  # Step 2: Find all .jks files
+  jks_files=($(ls "$upload"/*.jks 2>/dev/null))
+  if [ ${#jks_files[@]} -eq 0 ]; then
+    whiptail --title "SSL Configuration" --msgbox "No .jks file/s found." 10 60
+    if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
+      upload_jks
+    else
+      duckDNS_create
+    fi
+  else
+    if [ ${#jks_files[@]} -eq 1 ]; then
+      jks_file="${jks_files[0]}"
+      if whiptail --title "JKS File/s Detected" --yesno "A .jks file $(basename "$jks_file") was detected. Do you want to use this file?" 10 60; then
+        ssl_config "$jks_file"
+      else
+        if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
+          upload_jks
+        else
+          duckDNS_create
+        fi
+      fi
+    else
+      # Create a radiolist with the list of .jks files
+      menu_options=()
+      for file in "${jks_files[@]}"; do
+        menu_options+=("$(basename "$file")" "" OFF)
+      done
+
+      while true; do
+        jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
+        
+        if [ $? -eq 0 ] && [ -n "$jks_file" ]; then
+          jks_file="$upload/$jks_file"
+          break
+        else
+          if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
+            whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
+            return 1
+          fi
+        fi
+      done
+
+      ssl_config "$jks_file"
+    fi
+  fi
+}
+
+####
 # Function to guide DuckDNS domain setup and SSL creation
 duckDNS_create() {
     local readonly DIALOG_WIDTH=60
@@ -222,64 +280,6 @@ duckDNS_create() {
 }
 
 ####
-# Function to scan for .jks file and handle SSL configuration
-check_for_jks() {
-  # Step 1: Ask user if they want to use SSL
-  if ! whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
-    create_docker_image
-    return
-  fi
-
-  whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration... \nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
-
-  # Step 2: Find all .jks files
-  jks_files=($(ls "$upload"/*.jks 2>/dev/null))
-  if [ ${#jks_files[@]} -eq 0 ]; then
-    whiptail --title "SSL Configuration" --msgbox "No .jks file/s found." 10 60
-    if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
-      upload_jks
-    else
-      duckDNS_create
-    fi
-  else
-    if [ ${#jks_files[@]} -eq 1 ]; then
-      jks_file="${jks_files[0]}"
-      if whiptail --title "JKS File/s Detected" --yesno "A .jks file $(basename "$jks_file") was detected. Do you want to use this file?" 10 60; then
-        ssl_config "$jks_file"
-      else
-        if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
-          upload_jks
-        else
-          duckDNS_create
-        fi
-      fi
-    else
-      # Create a radiolist with the list of .jks files
-      menu_options=()
-      for file in "${jks_files[@]}"; do
-        menu_options+=("$(basename "$file")" "" OFF)
-      done
-
-      while true; do
-        jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
-        
-        if [ $? -eq 0 ] && [ -n "$jks_file" ]; then
-          jks_file="$upload/$jks_file"
-          break
-        else
-          if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
-            whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
-            return 1
-          fi
-        fi
-      done
-
-      ssl_config "$jks_file"
-    fi
-  fi
-}
-
-####
 # Function to upload .jks file
 upload_jks() {
   while true; do
@@ -345,14 +345,14 @@ ssl_config() {
   if [[ "$jks_file" == *"streamlock"* ]]; then
     jks_domain="${jks_file%.jks}"
   elif [[ "$jks_file" == *"duckdns"* ]]; then
-    jks_domain="$jks_duckdns_domain"
+    jks_domain="${jks_file%.jks}"
   else
     jks_domain=""
   fi
 
   # Capture the domain for the .jks file
   while true; do
-    jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for .jks file (e.g., myWowzaDomain.com):" 10 60 "$jks_domain" 3>&1 1>&2 2>&3)
+    jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for $jks_file file (e.g., myWowzaDomain.com):" 10 60 "$jks_domain" 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ] && [ -n "$jks_domain" ]; then
       break
     else
@@ -784,7 +784,7 @@ install_swagger() {
   # Download Swagger UI from Wowza
   cd "$container_dir/www"
   wget https://www.wowza.com/downloads/forums/restapidocumentation/RESTAPIDocumentationWebpage.zip
-  unzip RESTAPIDocumentationWebpage.zip -d swagger
+  unzip -o RESTAPIDocumentationWebpage.zip -d swagger
   rm RESTAPIDocumentationWebpage.zip
 
   # Replace the URL in the swagger/index.html file
