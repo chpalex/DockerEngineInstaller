@@ -853,9 +853,9 @@ create_html_instructions() {
   <div class="container">
     <div class="section">
       <h2>Wowza Streaming Engine</h2>
-      <img src="https://www.wowza.com/wp-content/uploads/Graphics-Social-Profile-Images-Logo-WhiteBG-1024x512-1.png" alt="Wowza Logo" class="logo">
-      <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8090 target="_blank">https://$jks_domain:8090</a></p>
-      <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:444/swagger target="_blank">https://$jks_domain:444/swagger</a></p>
+      <img src="https://www.wowza.com/wp-content/uploads/Wowza-logo-transparent.png" alt="Wowza Logo" class="logo">
+      <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8090" target="_blank">https://$jks_domain:8090</a></p>
+      <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:444/swagger/" target="_blank">https://$jks_domain:444/swagger</a></p>
       <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
       <ul>
         <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
@@ -882,19 +882,19 @@ create_html_instructions() {
 
     <div class="section">
       <h2>Portainer</h2>
-      <img src="https://www.portainer.io/hubfs/portainer-logo-black.svg" alt="Portainer Logo" class="logo">
-      <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443 target="_blank">https://$jks_domain:9443</a></p>
+      <img src="https://w7.pngwing.com/pngs/112/58/png-transparent-portainer-wordmark-hd-logo.png" alt="Portainer Logo" class="logo">
+      <p>Access the Portainer web interface at: <a href="https://$jks_domain:9443" target="_blank">https://$jks_domain:9443</a></p>
       <p>Portainer is a lightweight management UI which allows you to easily manage your Docker host.</p>
-      <p>For more information, visit the <a href="https://www.portainer.io/ target="_blank">Portainer website</a>.</p>
+      <p>For more information, visit the <a href="https://www.portainer.io" target="_blank">Portainer website</a>.</p>
     </div>
 
     <div class="section">
       <h2>SWAG</h2>
       <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
-      <p>Access the SWAG webserver at: <a href="https://$jks_domain:444 target="_blank">https://$jks_domain:444</a></p>
+      <p>Access the SWAG webserver at: <a href="https://$jks_domain:444" target="_blank">https://$jks_domain:444</a></p>
       <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
       <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
-      <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag target="_blank">SWAG github</a>.</p>
+      <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag" target="_blank">SWAG github</a>.</p>
     </div>
   </div>
 </body>
