@@ -941,7 +941,7 @@ install_swagger
 cleanup
 create_html_instructions
 
-echo -e "${w}For instructions on using the installed software, please visit https://$jks_domain:444/instructions.html${NOCOLOR}"
+echo -e "${w}For instructions on using the installed software, please visit ${yellow}https://$jks_domain:444/instructions.html${NOCOLOR}"
 
 # Prompt user to delete installer script
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
