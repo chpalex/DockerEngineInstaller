@@ -187,6 +187,9 @@ duckDNS_create() {
     # Export variables and append domain
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
+    # Create jksfile variable
+    jks_file="$upload/${jks_duckdns_domain}.jks"
+
     if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
       # Create JKS file
       touch "$upload/${jks_duckdns_domain}.jks" || {
@@ -215,7 +218,6 @@ duckDNS_create() {
         fi
 
     else
-      jks_file="$upload/${jks_duckdns_domain}.jks"
       ssl_config "$jks_file"
     fi
 
