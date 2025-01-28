@@ -383,6 +383,7 @@ FROM wowzamedia/wowza-streaming-engine-linux:${engine_version}
 
 RUN apt update && apt install -y nano
 WORKDIR /usr/local/WowzaStreamingEngine/
+RUN ls -la /sbin/
 
 # Create the tuning.sh script
 RUN cat <<'EOF' > tuning.sh
