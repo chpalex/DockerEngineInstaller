@@ -702,9 +702,17 @@ services:
       - ${swag}/etc/letsencrypt/archive/$jks_domain:/certs/archive/$jks_domain:ro
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
+EOL
+    # Conditionally add SSL command block
+  if $use_ssl; then
+    cat <<EOL >> "$container_dir/docker-compose.yml"
     command: |-
       --sslcert /certs/live/$jks_domain/fullchain.pem
       --sslkey /certs/live/$jks_domain/privkey.pem
+EOL
+  fi
+  
+  cat <<EOL >> "$container_dir/docker-compose.yml"
     restart: unless-stopped
 volumes:
   portainer_data:
