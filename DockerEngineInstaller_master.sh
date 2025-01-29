@@ -788,7 +788,11 @@ install_swagger() {
   rm RESTAPIDocumentationWebpage.zip
 
   # Replace the URL in the swagger/index.html file
+  if use_ssl; then
   sed -i "s|http://localhost:8089/api-docs|https://$jks_domain:8089/api-docs|g" swagger/index.html
+  else
+  sed -i "s|http://localhost:8089/api-docs|http://$public_ip:8089/api-docs|g" swagger/index.html
+  fi
 }
 
 ####
@@ -809,7 +813,9 @@ echo "Cleaning up the install directory..."
 ####
 # Function to create HTML instructions
 create_html_instructions() {
+  local public_ip=$(curl -s https://api.ipify.org)
   # Create HTML instructions
+  if $use_ssl; then
   cat <<EOL > "$container_dir/www/instructions.html"
 <!DOCTYPE html>
 <html>
@@ -913,6 +919,111 @@ create_html_instructions() {
 </body>
 </html>
 EOL
+  else
+  cat <<EOL > "$container_dir/www/instructions.html"
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WSE SWAG Portainer in Docker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #ff6600;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    h1 {
+      color: #f9f9f9;
+    }    
+    h2 {
+      color: #ff6600;
+    }
+    p, ul {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a {
+      color: #ff6600;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .logo {
+      width: 50px;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wowza Streaming Engine, SWAG and Portainer in Docker</h1>
+  </header>
+  <div class="container">
+    <div class="section">
+      <h2>Wowza Streaming Engine</h2>
+      <img src="https://www.wowza.com/wp-content/uploads/Wowza-logo-transparent.png" alt="Wowza Logo" class="logo">
+      <p>Access the Wowza Streaming Engine Manager at: <a href="http://$public_ip:8088" target="_blank">http://$public_ip:8088</a></p>
+      <p>Access the Swagger UI for REST API at: <a href="http://$public_ip/swagger/" target="_blank">http://$public_ip/swagger</a></p>
+      <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
+      <ul>
+        <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
+        <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
+        <li>Copy files in: <code>sudo cp [file_name] Engine_xxxx/[file_name]</code></li>
+      </ul>
+      <p>NOTE: Container must be restarted for changes to take effect:</p>
+      <p>To manage the state of the docker containers, use the following commands:</p>
+      <ul>
+        <li>Stop and destroy the Docker Wowza container: <code>cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR</code></li>
+        <li>Stop the container without destroying it: <code>cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR</code></li>
+        <li>Start the container after stopping it: <code>cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR</code></li>
+      </ul>
+      <p>To delete volumes, use the following command:</p>
+      <ul>
+        <li><code>sudo docker volume ls</code></li>
+        <li><code>sudo docker volume rm "volume name"</code></li>
+      </ul>
+      <p>To access the container directly, type:
+      <ul>
+        <li><code>sudo docker exec -it $container_name bash</code></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Portainer</h2>
+      <img src="https://w7.pngwing.com/pngs/112/58/png-transparent-portainer-wordmark-hd-logo.png" alt="Portainer Logo" class="logo">
+      <p>Access the Portainer web interface at: <a href="http://$public_ip:8000" target="_blank">http://$public_ip:8000</a></p>
+      <p>Portainer is a lightweight docker management UI that allows you to easily manage your Docker containers, images, networks, and volumes.</p>
+      <p>For more information, visit the <a href="https://www.portainer.io" target="_blank">Portainer website</a>.</p>
+    </div>
+
+    <div class="section">
+      <h2>SWAG</h2>
+      <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
+      <p>Access the SWAG webserver at: <a href="http://$public_ip" target="_blank">http://$public_ip</a></p>
+      <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
+      <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
+      <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag" target="_blank">SWAG github</a>.</p>
+    </div>
+  </div>
+</body>
+</html>
+EOL
+  fi
 }
 
 # Get the private IP address
@@ -952,7 +1063,11 @@ install_swagger
 cleanup
 create_html_instructions
 
+if $use_ssl; then
 echo -e "${w}For instructions on using the installed software, please visit ${yellow}https://$jks_domain:444/instructions.html${NOCOLOR}"
+else
+echo -e "${w}For instructions on using the installed software, please visit ${yellow}http://$public_ip/instructions.html${NOCOLOR}"
+fi
 
 # Prompt user to delete installer script
 if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
