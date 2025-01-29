@@ -142,9 +142,12 @@ fetch_and_set_wowza_versions() {
 
 ####
 # Function to scan for .jks file and handle SSL configuration
+use_ssl=false
 check_for_jks() {
   # Step 1: Ask user if they want to use SSL
-  if ! whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
+  if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
+    use_ssl=true
+  else
     create_docker_image
     return
   fi
@@ -590,7 +593,7 @@ if [ -f $container_dir/.env ]; then
   # Read existing values from .env file
   source $container_dir/.env
   # Present a whiptail window with existing data allowing user to make changes
-  prompt_credentials "$WSE_MGR_USER" "$WSE_LIC"
+  prompt_credentials "$WSE_MGR_USER" "$WSE_LIC" "$SSL_EMAIL"
 else
   # Prompt user for Wowza Streaming Engine Manager credentials and license key using whiptail
   prompt_credentials "" ""
@@ -788,7 +791,7 @@ install_swagger() {
   rm RESTAPIDocumentationWebpage.zip
 
   # Replace the URL in the swagger/index.html file
-  if use_ssl; then
+  if $use_ssl; then
   sed -i "s|http://localhost:8089/api-docs|https://$jks_domain:8089/api-docs|g" swagger/index.html
   else
   sed -i "s|http://localhost:8089/api-docs|http://$public_ip:8089/api-docs|g" swagger/index.html
