@@ -826,7 +826,7 @@ cd $upload
         -srckeystore "$jks_file" \
         -srcstorepass "$jks_password" \
         -srcstoretype JKS \
-        -destkeystore "$pkcs12_file" \
+        -destkeystore keystore.p12 \
         -deststoretype PKCS12 \
         -deststorepass "$jks_password" \
         -destkeypass "$jks_password" \
