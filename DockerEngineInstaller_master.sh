@@ -273,7 +273,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
@@ -368,6 +368,10 @@ ssl_config() {
   while true; do
     jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for $jks_file file (e.g., myWowzaDomain.com):" 10 60 "$jks_domain" 3>&1 1>&2 2>&3)
     if [ $? -eq 0 ] && [ -n "$jks_domain" ]; then
+        # Check if the domain contains 'duckdns.org' and set duckdns variable to true if it does
+        if [[ "$jks_domain" == *"duckdns.org"* ]]; then
+            duckdns=true
+        fi
       break
     else
       if ! whiptail --title "SSL Configuration" --yesno "Domain input is required. Do you want to try again?" 10 60; then
@@ -708,7 +712,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 EOL
     # Conditionally add SSL command block
-  if $use_ssl; then
+  if $duckdns; then
     cat <<EOL >> "$container_dir/docker-compose.yml"
     command: |-
       --sslcert /certs/live/$jks_domain/fullchain.pem
