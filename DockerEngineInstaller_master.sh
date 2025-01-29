@@ -68,6 +68,16 @@ install_jq() {
 }
 
 ####
+# Function to install unzip
+install_unzip() {
+  if ! command -v unzip &> /dev/null; then
+  echo "   -----unzip not found, installing unzip-----"
+  sudo apt install -y unzip > /dev/null 2>&1
+  fi
+}
+
+
+####
 # Fetch and set Wowza versions
 fetch_and_set_wowza_versions() {
     local url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
@@ -145,7 +155,7 @@ fetch_and_set_wowza_versions() {
 use_ssl=false
 check_for_jks() {
   # Step 1: Ask user if they want to use SSL
-  if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL." 10 60; then
+  if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL. Non SSL config is currently broken for Webserver and Portainer" 10 60; then
     use_ssl=true
   else
     create_docker_image
@@ -576,6 +586,7 @@ prompt_credentials() {
     fi
   fi
 
+  if $use_ssl; then
     SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
     whiptail --msgbox "Email address required. Please try again." 8 78 --title "Error"
@@ -584,6 +595,7 @@ prompt_credentials() {
       echo "No email provided, exiting install process" >&2
       exit 1
     fi
+  fi
   fi
 }
 
@@ -914,7 +926,10 @@ create_html_instructions() {
       <h2>SWAG</h2>
       <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
       <p>Access the SWAG webserver at: <a href="https://$jks_domain:444" target="_blank">https://$jks_domain:444</a></p>
-      <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
+      <p>SWAG - Secure Web Application Gateway (formerly known as letsencrypt, no relation to Let's Encrypt™) sets up an 
+      Nginx webserver and reverse proxy with php support and a built-in certbot client that automates free SSL server certificate generation 
+      and renewal processes (Let's Encrypt and ZeroSSL). It also contains fail2ban for intrusion prevention.
+      </p>
       <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
       <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag" target="_blank">SWAG github</a>.</p>
     </div>
@@ -1041,6 +1056,7 @@ private_ip=$(ip route get 1 | awk '{print $7;exit}')
 ##### Start the Installation #####
 install_docker
 install_jq
+install_unzip
 fetch_and_set_wowza_versions
 if [ $? -ne 0 ]; then
   echo -e "${w}Installation cancelled by user."
@@ -1061,7 +1077,9 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/transcoder/ $container_
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
-convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
+if $use_ssl; then
+    convert_pem_to_jks "$jks_domain" "$pkcs12_password" "$jks_password"
+fi
 install_swagger
 cleanup
 create_html_instructions
