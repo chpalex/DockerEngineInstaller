@@ -820,9 +820,10 @@ convert_jks_to_pem() {
         sudo apt-get update
         sudo apt-get install -y openjdk-21-jre-headless
     fi
-sudo keytool -importkeystore -srckeystore $upload/$jks_file -destkeystore keystore.p12 -deststoretype PKCS12 -srcalias $domain -deststorepass $jks_password -destkeypass $jks_password -noprompt
+cd $upload
+sudo keytool -importkeystore -srckeystore $jks_file -destkeystore keystore.p12 -deststoretype PKCS12 -srcalias $domain -srcstorepass $jks_password -srckeypass $jks_password -deststorepass $jks_password -destkeypass $jks_password -noprompt
 sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.pem
-openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem
+sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem
 sudo cp cert.pem $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem
 sudo cp key.pem $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem
 sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem $swag/etc/letsencrypt/live/$jks_domain/fullchain.pem
