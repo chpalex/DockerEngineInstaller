@@ -295,6 +295,7 @@ duckDNS_create() {
 ####
 # Function to upload .jks file
 upload_jks() {
+  uploaded_jks=false
   while true; do
     if whiptail --title "SSL Configuration" --yesno "Do you want to upload a .jks file?" 10 60; then
       whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $upload..." 10 60
@@ -348,7 +349,6 @@ upload_jks() {
   done
 }
 
-
 ####
 # Function to configure SSL
 ssl_config() {
@@ -363,7 +363,8 @@ ssl_config() {
   else
     jks_domain=""
   fi
-
+  # Initialize duckdns variable to false
+  duckdns=false
   # Capture the domain for the .jks file
   while true; do
     jks_domain=$(whiptail --title "SSL Configuration" --inputbox "Provide the domain for $jks_file file (e.g., myWowzaDomain.com):" 10 60 "$jks_domain" 3>&1 1>&2 2>&3)
@@ -594,7 +595,7 @@ prompt_credentials() {
     fi
   fi
 
-  if $duckns; then
+  if $duckdns; then
     SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
     whiptail --msgbox "Email address required. Please try again." 8 78 --title "Error"
@@ -1094,7 +1095,7 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
 if $duckdns; then
-    convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
+  convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
 install_swagger
 cleanup
