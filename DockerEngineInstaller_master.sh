@@ -832,13 +832,15 @@ cd $upload
         -deststorepass "$jks_password" \
         -destkeypass "$jks_password" \
         -noprompt
-sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.pem
-sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem
+sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.crt
+sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.key
 
-sudo cp cert.pem $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem
-sudo cp key.pem $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem $swag/etc/letsencrypt/live/$jks_domain/fullchain.pem
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem $swag/etc/letsencrypt/live/$jks_domain/privkey.pem
+sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
+sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt $swag/etc/letsencrypt/live/$jks_domain/fullchain.crt
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key $swag/etc/letsencrypt/live/$jks_domain/privkey.key
+
+
 }
 
 
