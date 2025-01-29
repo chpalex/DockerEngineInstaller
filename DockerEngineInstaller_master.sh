@@ -713,7 +713,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 EOL
     # Conditionally add SSL command block
-  if $duckdns; then
+  if $use_ssl; then
     cat <<EOL >> "$container_dir/docker-compose.yml"
     command: |-
       --sslcert /certs/live/$jks_domain/fullchain.pem
@@ -799,7 +799,7 @@ convert_pem_to_jks() {
         openssl pkcs12 -export -in '$pem_dir/fullchain1.pem' -inkey '$pem_dir/privkey1.pem' -out '$jks_dir/$domain.p12' -name '$domain' -passout pass:$pkcs12_password &&
         /usr/local/WowzaStreamingEngine/java/bin/keytool -importkeystore -srckeystore '$jks_dir/$domain.p12' -srcstoretype PKCS12 -srcstorepass $pkcs12_password -destkeystore '$jks_dir/$domain.jks' -deststorepass $jks_password -destkeypass $jks_password -alias '$domain' -noprompt
     "
-    sudo docker compose restart 
+
     if [ $? -eq 0 ]; then
         echo "Successfully converted PEM to JKS"
     else
@@ -808,6 +808,25 @@ convert_pem_to_jks() {
     fi
 
     return 0
+}
+
+####
+# Function to convert uploaded jks file to pem
+convert_jks_to_pem() {
+
+# Check if keytool is installed and install it
+    if ! command -v keytool &> /dev/null; then
+        echo "keytool could not be found. Installing..."
+        sudo apt-get update
+        sudo apt-get install -y openjdk-21-jre-headless
+    fi
+sudo keytool -importkeystore -srckeystore $upload/$jks_file -destkeystore keystore.p12 -deststoretype PKCS12 -srcalias $domain -deststorepass $jks_password -destkeypass $jks_password -noprompt
+sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.pem
+openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem
+sudo cp cert.pem $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem
+sudo cp key.pem $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem $swag/etc/letsencrypt/live/$jks_domain/fullchain.pem
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem $swag/etc/letsencrypt/live/$jks_domain/privkey.pem
 }
 
 ####
@@ -840,10 +859,14 @@ echo "Cleaning up the install directory..."
     sudo rm "$upload/tomcat.properties"
   fi
 
+  # Copy the .jks file into the wse container
   if ! $duckdns; then
     sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/$jks_file
   fi
 
+  # Restart docker stack to apply changes
+  cd $container_dir
+  sudo docker compose restart
 }
 
 ####
@@ -1119,6 +1142,10 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Eng
 if $duckdns; then
   convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
+if $upload_jks; then
+  convert_jks_to_pem
+fi
+
 install_swagger
 cleanup
 create_html_instructions
