@@ -273,7 +273,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && ssl_config "$jks_file" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
@@ -337,6 +337,7 @@ upload_jks() {
             return 1
           fi
         fi
+        uploaded_jks=true
         ssl_config "$jks_file"
         return 0
       fi
@@ -1088,7 +1089,7 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/transcoder/ $container_
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir/Engine_manager
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
-if $use_ssl; then
+if $duckdns; then
     convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
 install_swagger
