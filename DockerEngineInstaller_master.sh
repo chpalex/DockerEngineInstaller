@@ -590,7 +590,7 @@ prompt_credentials() {
     fi
   fi
 
-  if $use_ssl; then
+  if $duckns; then
     SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
     whiptail --msgbox "Email address required. Please try again." 8 78 --title "Error"
@@ -609,7 +609,7 @@ if [ -f $container_dir/.env ]; then
   # Read existing values from .env file
   source $container_dir/.env
   # Present a whiptail window with existing data allowing user to make changes
-  prompt_credentials "$WSE_MGR_USER" "$WSE_LIC" "$SSL_EMAIL"
+  prompt_credentials "$WSE_MGR_USER" "$WSE_LIC" "$EMAIL"
 else
   # Prompt user for Wowza Streaming Engine Manager credentials and license key using whiptail
   prompt_credentials "" ""
