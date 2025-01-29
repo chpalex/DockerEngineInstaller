@@ -1089,7 +1089,7 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
 
 if $use_ssl; then
-    convert_pem_to_jks "$jks_domain" "$pkcs12_password" "$jks_password"
+    convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
 install_swagger
 cleanup
