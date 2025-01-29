@@ -155,7 +155,7 @@ fetch_and_set_wowza_versions() {
 use_ssl=false
 check_for_jks() {
   # Step 1: Ask user if they want to use SSL
-  if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL. Non SSL config is currently broken for Webserver and Portainer" 10 60; then
+  if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL. Non SSL config is currently broken for Webserver" 10 60; then
     use_ssl=true
   else
     create_docker_image
@@ -711,7 +711,7 @@ EOL
       --sslkey /certs/live/$jks_domain/privkey.pem
 EOL
   fi
-  
+
   cat <<EOL >> "$container_dir/docker-compose.yml"
     restart: unless-stopped
 volumes:
