@@ -840,6 +840,10 @@ echo "Cleaning up the install directory..."
     sudo rm "$upload/tomcat.properties"
   fi
 
+  if ! $duckdns; then
+    sudo docker cp $upload/$jks_file $container_name:/usr/local/WowzaStreamingEngine/conf/$jks_file
+  fi
+
 }
 
 ####
@@ -908,6 +912,15 @@ create_html_instructions() {
       <p>Access the Wowza Streaming Engine Manager at: <a href="https://$jks_domain:8090" target="_blank">https://$jks_domain:8090</a></p>
       <p>Access the Swagger UI for REST API at: <a href="https://$jks_domain:444/swagger/" target="_blank">https://$jks_domain:444/swagger</a></p>
       <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
+      <ul>
+        <li>Engine_lib</li>
+        <li>Engine_conf</li>
+        <li>Engine_logs</li>
+        <li>Engine_content</li>
+        <li>Engine_transcoder</li>
+        <li>Engine_manager</li>
+      </ul>
+      <p>Use the commands below to edit files directly, copy files in and out of the container:</p>
       <ul>
         <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
         <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
@@ -1015,6 +1028,15 @@ EOL
       <p>Access the Wowza Streaming Engine Manager at: <a href="http://$public_ip:8088" target="_blank">http://$public_ip:8088</a></p>
       <p>Access the Swagger UI for REST API at: <a href="http://$public_ip/swagger/" target="_blank">http://$public_ip/swagger</a></p>
       <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
+      <ul>
+        <li>Engine_lib</li>
+        <li>Engine_conf</li>
+        <li>Engine_logs</li>
+        <li>Engine_content</li>
+        <li>Engine_transcoder</li>
+        <li>Engine_manager</li>
+      </ul>
+      <p>Use the commands below to edit files directly, copy files in and out of the container:</p>
       <ul>
         <li>Edit files directly: <code>sudo nano Engine_xxxx/[file_name]</code></li>
         <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
