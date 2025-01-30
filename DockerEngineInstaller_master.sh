@@ -166,6 +166,7 @@ check_for_jks() {
 
   # Step 2: Find all .jks files
   jks_files=($(ls "$upload"/*.jks 2>/dev/null))
+  chosen_jks_file=false
   if [ ${#jks_files[@]} -eq 0 ]; then
     whiptail --title "SSL Configuration" --msgbox "No .jks file/s found." 10 60
     if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
@@ -177,6 +178,7 @@ check_for_jks() {
     if [ ${#jks_files[@]} -eq 1 ]; then
       jks_file="${jks_files[0]}"
       if whiptail --title "JKS File/s Detected" --yesno "A .jks file $(basename "$jks_file") was detected. Do you want to use this file?" 10 60; then
+        chosen_jks_file=true
         ssl_config "$jks_file"
       else
         if whiptail --title "SSL Configuration" --yesno "Do you want to upload a JKS file or create a new domain and JKS file?" 10 60 --yes-button "Upload" --no-button "Create"; then
@@ -214,6 +216,7 @@ check_for_jks() {
 ####
 # Function to guide DuckDNS domain setup and SSL creation
 duckDNS_create() {
+  duckdns=false
     local readonly DIALOG_WIDTH=60
     local readonly DIALOG_HEIGHT=12
     local DNS_CONF_DIR="$swag/dns-conf"
@@ -273,7 +276,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && ssl_config "$jks_file" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                     return 1
@@ -1166,7 +1169,7 @@ sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Eng
 if $duckdns; then
   convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
-if $upload_jks; then
+if $uploaded_jks || $chosen_jks_file; then
   convert_jks_to_pem
 fi
 
