@@ -304,8 +304,6 @@ duckDNS_create() {
             create_docker_image
             return 1
         fi
-    fi
-
     return 0
 }
 
