@@ -822,6 +822,8 @@ convert_pem_to_jks() {
 # Function to convert uploaded jks file to pem
 convert_jks_to_pem() {
 
+echo "Converting $jks_file to CRT format for use with SWAG and Portainer..."
+
 # Check if keytool is installed and install it
     if ! command -v keytool &> /dev/null; then
         echo "keytool could not be found. Installing..."
@@ -839,8 +841,8 @@ cd $upload
         -deststorepass "$jks_password" \
         -destkeypass "$jks_password" \
         -noprompt
-sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.crt
-sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.key
+sudo openssl pkcs12 -pass pass:"$jks_password" -in keystore.p12 -nokeys -out cert.crt
+sudo openssl pkcs12 -pass pass:"$jks_password" -in keystore.p12 -nodes -nocerts -out key.key
 
 sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
 sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
