@@ -653,6 +653,10 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=\${TZ}
+EOL
+  # Conditionally add SSL command block
+  if $duckdns; then
+    cat <<EOL >> "$container_dir/docker-compose.yml"
       - URL=\${URL}
       - VALIDATION=dns
       - SUBDOMAINS= #optional
@@ -666,6 +670,10 @@ services:
       - STAGING=false #optional
       - DISABLE_F2B= #optional
       - SWAG_AUTORELOAD=true
+EOL
+  fi
+
+  cat <<EOL >> "$container_dir/docker-compose.yml"
     volumes:
       - ${swag}:/config
       - ./www:/config/www
