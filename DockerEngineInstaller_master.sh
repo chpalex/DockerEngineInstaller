@@ -136,14 +136,14 @@ fetch_and_set_wowza_versions() {
     # Check if user canceled or input is empty, set default name
     if [ $? -ne 0 ] || [ -z "$container_name" ]; then
         container_name="wse_${engine_version}"
-        # Define the SWAG directory
-        swag="$DockerEngineInstaller$container_name/config"
-        mkdir -p -m 777 "$swag"
     fi
 
     # Create container directory
     container_dir="$DockerEngineInstaller/$container_name"
-    mkdir -p "$container_dir" || {
+    mkdir -p "$container_dir"
+    # Define the SWAG directory
+    swag="$container_dir/config"
+    mkdir -p -m 777 "$swag" || {
         echo "Error: Failed to create container directory"
         exit 1
     }
