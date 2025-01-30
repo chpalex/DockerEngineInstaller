@@ -32,10 +32,6 @@ mkdir -p -m 777 "$DockerEngineInstaller"
 upload="$DockerEngineInstaller/upload"
 mkdir -p -m 777 "$upload"
 
-# Define the SWAG directory
-swag="$DockerEngineInstaller/config"
-mkdir -p -m 777 "$swag"
-
 ####
 ## Functions ##
 
@@ -140,6 +136,9 @@ fetch_and_set_wowza_versions() {
     # Check if user canceled or input is empty, set default name
     if [ $? -ne 0 ] || [ -z "$container_name" ]; then
         container_name="wse_${engine_version}"
+        # Define the SWAG directory
+        swag="$DockerEngineInstaller$container_name/config"
+        mkdir -p -m 777 "$swag"
     fi
 
     # Create container directory
@@ -158,8 +157,12 @@ check_for_jks() {
   if whiptail --title "SSL Configuration" --yesno "Do you want to use SSL? Note: The installer can assist in getting a free domain and SSL. Non SSL config is currently broken for Webserver" 10 60; then
     use_ssl=true
   else
+    use_ssl=false
+    duckdns=false
+    uploaded_jks=false
+    chosen_jks_file=false
     create_docker_image
-    return
+    return 1
   fi
 
   whiptail --title "SSL Configuration" --msgbox "Starting SSL Configuration... \nSearching for existing SSL Java Key Store (JKS) files in $upload" 10 60
@@ -203,8 +206,11 @@ check_for_jks() {
         else
           if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
             whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
-            use_ssl=false
-            create_docker_image
+              use_ssl=false
+              duckdns=false
+              uploaded_jks=false
+              chosen_jks_file=false
+              create_docker_image
             return 1
           fi
         fi
@@ -245,8 +251,11 @@ duckDNS_create() {
         
         if [[ $? -ne 0 ]]; then
             whiptail --title "Error" --msgbox "Domain input was canceled. Exiting." 8 $DIALOG_WIDTH
-            use_ssl=false
-            create_docker_image
+              use_ssl=false
+              duckdns=false
+              uploaded_jks=false
+              chosen_jks_file=false
+              create_docker_image
             return 1
         elif [[ -z "$jks_duckdns_domain" ]]; then
             whiptail --title "Error" --msgbox "Domain input is required. Please enter a valid DuckDNS domain." 8 $DIALOG_WIDTH
@@ -261,8 +270,11 @@ duckDNS_create() {
         
         if [[ $? -ne 0 ]]; then
             whiptail --title "Error" --msgbox "Token input was canceled. Exiting." 8 $DIALOG_WIDTH
-            use_ssl=false
-            create_docker_image
+              use_ssl=false
+              duckdns=false
+              uploaded_jks=false
+              chosen_jks_file=false
+              create_docker_image
             return 1
         elif [[ -z "$duckdns_token" ]]; then
             whiptail --title "Error" --msgbox "DuckDNS token is required. Please enter a valid token." 8 $DIALOG_WIDTH
@@ -287,21 +299,30 @@ duckDNS_create() {
                 sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
-                    use_ssl=false
-                    create_docker_image
+                      use_ssl=false
+                      duckdns=false
+                      uploaded_jks=false
+                      chosen_jks_file=false
+                      create_docker_image
                     return 1
                 }
             else
                 whiptail --title "Error" --msgbox "Failed to copy DuckDNS configuration" 8 $DIALOG_WIDTH
                 rm -f "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
-                use_ssl=false
-                create_docker_image
+                  use_ssl=false
+                  duckdns=false
+                  uploaded_jks=false
+                  chosen_jks_file=false
+                  create_docker_image
                 return 1
             fi
         else
             whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
-            use_ssl=false
-            create_docker_image
+              use_ssl=false
+              duckdns=false
+              uploaded_jks=false
+              chosen_jks_file=false
+              create_docker_image
             return 1
         fi
     return 0
@@ -323,6 +344,9 @@ upload_jks() {
         else
           whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
           use_ssl=false
+          duckdns=false
+          uploaded_jks=false
+          chosen_jks_file=false
           create_docker_image          
           return 1
         fi
@@ -345,8 +369,11 @@ upload_jks() {
             else
               if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
                 whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
-                use_ssl=false
-                create_docker_image
+                  use_ssl=false
+                  duckdns=false
+                  uploaded_jks=false
+                  chosen_jks_file=false
+                  create_docker_image
                 return 1
               fi
             fi
@@ -354,8 +381,11 @@ upload_jks() {
 
           if [ $? -ne 0 ]; then
             whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
-            use_ssl=false
-            create_docker_image
+          use_ssl=false
+          duckdns=false
+          uploaded_jks=false
+          chosen_jks_file=false
+          create_docker_image
             return 1
           fi
         fi
@@ -365,8 +395,11 @@ upload_jks() {
       fi
     else
       whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL" 10 60
-      use_ssl=false
-      create_docker_image
+          use_ssl=false
+          duckdns=false
+          uploaded_jks=false
+          chosen_jks_file=false
+          create_docker_image
       return 1
     fi
   done
@@ -401,6 +434,9 @@ ssl_config() {
       if ! whiptail --title "SSL Configuration" --yesno "Domain input is required. Do you want to try again?" 10 60; then
         whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Continuing without SSL." 10 60
           use_ssl=false
+          duckdns=false
+          uploaded_jks=false
+          chosen_jks_file=false
           create_docker_image
         return 1
       fi
@@ -416,6 +452,9 @@ ssl_config() {
       if ! whiptail --title "SSL Configuration" --yesno "Password input is required. Do you want to try again?" 10 60; then
         whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Continuing without SSL." 10 60
           use_ssl=false
+          duckdns=false
+          uploaded_jks=false
+          chosen_jks_file=false
           create_docker_image
         return 1
       fi
@@ -1206,7 +1245,9 @@ echo -e "${w}For instructions on using the installed software, please visit ${ye
 fi
 
 # Prompt user to delete installer script
-if whiptail --title "Installation complete" --yesno "The installer has completed the installation of Wowza Streaming Engine, SWAG and Portainer.
-Do you want to delete this installer script?" 8 78; then
+if whiptail --title "Installation complete" --yesno "The installer has completed the installation of 
+Wowza Streaming Engine, SWAG and Portainer.
+
+Do you want to delete this installer script?" 32 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
 fi
