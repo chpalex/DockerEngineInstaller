@@ -328,12 +328,11 @@ duckDNS_create() {
     return 0
 }
 
-####
 # Function to upload .jks file
 upload_jks() {
   uploaded_jks=false
   while true; do
-    if whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $upload..." 10 60
+    if whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $upload..." 10 60; then
 
       # Find all .jks files
       jks_files=($(ls "$upload"/*.jks 2>/dev/null))
@@ -368,11 +367,11 @@ upload_jks() {
             else
               if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
                 whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
-                  use_ssl=false
-                  duckdns=false
-                  uploaded_jks=false
-                  chosen_jks_file=false
-                  create_docker_image
+                use_ssl=false
+                duckdns=false
+                uploaded_jks=false
+                chosen_jks_file=false
+                create_docker_image
                 return 1
               fi
             fi
@@ -380,11 +379,11 @@ upload_jks() {
 
           if [ $? -ne 0 ]; then
             whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
-          use_ssl=false
-          duckdns=false
-          uploaded_jks=false
-          chosen_jks_file=false
-          create_docker_image
+            use_ssl=false
+            duckdns=false
+            uploaded_jks=false
+            chosen_jks_file=false
+            create_docker_image
             return 1
           fi
         fi
@@ -394,11 +393,11 @@ upload_jks() {
       fi
     else
       whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL" 10 60
-          use_ssl=false
-          duckdns=false
-          uploaded_jks=false
-          chosen_jks_file=false
-          create_docker_image
+      use_ssl=false
+      duckdns=false
+      uploaded_jks=false
+      chosen_jks_file=false
+      create_docker_image
       return 1
     fi
   done
