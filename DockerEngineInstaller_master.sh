@@ -825,7 +825,6 @@ cd $upload
     sudo keytool -importkeystore \
         -srckeystore "$jks_file" \
         -srcstorepass "$jks_password" \
-        -srckeypass "$jks_password" \
         -srcstoretype JKS \
         -destkeystore keystore.p12 \
         -deststoretype PKCS12 \
