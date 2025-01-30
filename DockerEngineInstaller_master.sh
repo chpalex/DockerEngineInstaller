@@ -1248,6 +1248,6 @@ fi
 if whiptail --title "Installation complete" --yesno "The installer has completed the installation of 
 Wowza Streaming Engine, SWAG and Portainer.
 
-Do you want to delete this installer script?" 32 78; then
+Do you want to delete this installer script?" 16 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
 fi
