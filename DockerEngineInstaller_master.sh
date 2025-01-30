@@ -19,16 +19,16 @@ whiptail --title "Docker Engine Workflow Installer" --msgbox "
 Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine, a simple webserver and SSL in a Docker environment." 20 75
 
 #
-## Set directory variables
+## Set directory variables and create the directories
 
-# Get the directory of the script
+# Get the directory of the script file and set varilable
 SCRIPT_DIR=$(realpath $(dirname "$0"))
 
 # Define the build directory
 DockerEngineInstaller="$SCRIPT_DIR/DockerEngineInstaller"
 mkdir -p -m 777 "$DockerEngineInstaller"
 
-# Define the base_files directory
+# Define the upload directory
 upload="$DockerEngineInstaller/upload"
 mkdir -p -m 777 "$upload"
 
@@ -78,7 +78,7 @@ install_unzip() {
 
 
 ####
-# Fetch and set Wowza versions
+# Function to fetch and set Wowza streaming engine Docker versions
 fetch_and_set_wowza_versions() {
     local url="https://registry.hub.docker.com/v2/repositories/wowzamedia/wowza-streaming-engine-linux/tags"
     local versions=()
@@ -109,7 +109,7 @@ fetch_and_set_wowza_versions() {
         exit 1
     fi
 
-    # Create menu items directly
+    # Create menu items for available versions of wse docker images
     local menu_items=()
     for version in "${versions[@]}"; do
         menu_items+=("$version" "")
@@ -121,7 +121,7 @@ fetch_and_set_wowza_versions() {
     local list_height=$(( ${#menu_items[@]} / 2 ))
     list_height=$(( list_height > 10 ? 10 : list_height ))
 
-    # Select version
+    # Display a box to select version to use
     engine_version=$(whiptail --title "Select Wowza Engine Version" \
                              --menu "Available Docker Wowza Engine Versions:" \
                              $menu_height 80 $list_height \
@@ -151,7 +151,7 @@ fetch_and_set_wowza_versions() {
 }
 
 ####
-# Function to scan for .jks file and handle SSL configuration
+# Function to check if SSL is going to be used, then scan for .jks file, offer to choose an available one
 use_ssl=false
 check_for_jks() {
   # Step 1: Ask user if they want to use SSL
@@ -193,7 +193,7 @@ check_for_jks() {
       for file in "${jks_files[@]}"; do
         menu_options+=("$(basename "$file")" "" OFF)
       done
-
+      # Present a list of .jks files to choose from
       while true; do
         jks_file=$(whiptail --title "SSL Configuration" --radiolist "Multiple JKS files found. Choose one:" 20 60 10 "${menu_options[@]}" 3>&1 1>&2 2>&3)
         
@@ -203,18 +203,20 @@ check_for_jks() {
         else
           if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
             whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
+            use_ssl=false
+            create_docker_image
             return 1
           fi
         fi
       done
-
+      chosen_jks_file=true
       ssl_config "$jks_file"
     fi
   fi
 }
 
 ####
-# Function to guide DuckDNS domain setup and SSL creation
+# Function to guide DuckDNS domain setup and prep for swag SSL setup
 duckDNS_create() {
   duckdns=false
     local readonly DIALOG_WIDTH=60
@@ -234,22 +236,33 @@ duckDNS_create() {
         return 1
     }
 
-    # Show instructions
+    # Show instructions for DuckDNS 
     whiptail --title "DuckDNS Setup" --msgbox "Please: \n\n1. Go to duckdns.org\n2. Create a new domain pointing to: $public_ip\n3. Copy your token\n\nClick OK when ready." $DIALOG_HEIGHT $DIALOG_WIDTH
 
-    # Get domain
+    # Get domain that was configured in DuckDNS
     while true; do
         jks_duckdns_domain=$(whiptail --title "DuckDNS Domain" --inputbox "Enter your DuckDNS domain (without .duckdns.org):" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
         
-        [[ $? -ne 0 ]] && return 1
-        break
+        if [[ $? -ne 0 ]]; then
+            whiptail --title "Error" --msgbox "Domain input was canceled. Exiting." 8 $DIALOG_WIDTH
+            use_ssl=false
+            create_docker_image
+            return 1
+        elif [[ -z "$jks_duckdns_domain" ]]; then
+            whiptail --title "Error" --msgbox "Domain input is required. Please enter a valid DuckDNS domain." 8 $DIALOG_WIDTH
+        else
+            break
+        fi
     done
 
-    # Get token
+    # Get DuckDNS token
     while true; do
         duckdns_token=$(whiptail --title "DuckDNS Token" --inputbox "Enter your DuckDNS token:" 8 $DIALOG_WIDTH 3>&1 1>&2 2>&3)
         
         if [[ $? -ne 0 ]]; then
+            whiptail --title "Error" --msgbox "Token input was canceled. Exiting." 8 $DIALOG_WIDTH
+            use_ssl=false
+            create_docker_image
             return 1
         elif [[ -z "$duckdns_token" ]]; then
             whiptail --title "Error" --msgbox "DuckDNS token is required. Please enter a valid token." 8 $DIALOG_WIDTH
@@ -261,15 +274,10 @@ duckDNS_create() {
     # Export variables and append domain
     export jks_duckdns_domain="${jks_duckdns_domain}.duckdns.org" duckdns_token
 
+    # Create temp JKS file
+    touch "$upload/${jks_duckdns_domain}.jks"
     # Create jksfile variable
     jks_file="$upload/${jks_duckdns_domain}.jks"
-
-    if whiptail --title "DuckDNS Setup" --yesno "Use DuckDNS for Wowza Streaming Engine access?" 10 $DIALOG_WIDTH; then
-      # Create JKS file
-      touch "$upload/${jks_duckdns_domain}.jks" || {
-          whiptail --title "Error" --msgbox "Failed to create JKS file" 8 $DIALOG_WIDTH
-          return 1
-      }
 
       # Ensure the DNS_CONF_DIR exists
       sudo mkdir -p "$DNS_CONF_DIR"
@@ -279,15 +287,21 @@ duckDNS_create() {
                 sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                    use_ssl=false
+                    create_docker_image
                     return 1
                 }
             else
                 whiptail --title "Error" --msgbox "Failed to copy DuckDNS configuration" 8 $DIALOG_WIDTH
                 rm -f "$upload/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
+                use_ssl=false
+                create_docker_image
                 return 1
             fi
         else
             whiptail --title "Error" --msgbox "Failed to create DuckDNS configuration" 8 $DIALOG_WIDTH
+            use_ssl=false
+            create_docker_image
             return 1
         fi
     fi
@@ -310,6 +324,8 @@ upload_jks() {
           continue
         else
           whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
+          use_ssl=false
+          create_docker_image          
           return 1
         fi
       else
@@ -331,6 +347,8 @@ upload_jks() {
             else
               if ! whiptail --title "SSL Configuration" --yesno "You must select a JKS file. Do you want to try again? Use the space button to select." 10 60; then
                 whiptail --title "SSL Configuration" --msgbox "No JKS file selected. Exiting." 10 60
+                use_ssl=false
+                create_docker_image
                 return 1
               fi
             fi
@@ -338,6 +356,8 @@ upload_jks() {
 
           if [ $? -ne 0 ]; then
             whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL." 10 60
+            use_ssl=false
+            create_docker_image
             return 1
           fi
         fi
@@ -347,6 +367,8 @@ upload_jks() {
       fi
     else
       whiptail --title "SSL Configuration" --msgbox "You chose not to add a .jks file. Continuing without SSL" 10 60
+      use_ssl=false
+      create_docker_image
       return 1
     fi
   done
@@ -380,6 +402,8 @@ ssl_config() {
     else
       if ! whiptail --title "SSL Configuration" --yesno "Domain input is required. Do you want to try again?" 10 60; then
         whiptail --title "SSL Configuration" --msgbox "Domain input cancelled. Continuing without SSL." 10 60
+          use_ssl=false
+          create_docker_image
         return 1
       fi
     fi
@@ -393,6 +417,8 @@ ssl_config() {
     else
       if ! whiptail --title "SSL Configuration" --yesno "Password input is required. Do you want to try again?" 10 60; then
         whiptail --title "SSL Configuration" --msgbox "Password input cancelled. Continuing without SSL." 10 60
+          use_ssl=false
+          create_docker_image
         return 1
       fi
     fi
@@ -602,7 +628,7 @@ prompt_credentials() {
     SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
   if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
     whiptail --msgbox "Email address required. Please try again." 8 78 --title "Error"
-    SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certifiacet:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
+    SSL_EMAIL=$(whiptail --inputbox "Provide email address for SSL Certificate:" 8 78 --title "ZeroSSL Email" 3>&1 1>&2 2>&3)
     if [ $? -ne 0 ] || [ -z "$SSL_EMAIL" ]; then
       echo "No email provided, exiting install process" >&2
       exit 1
@@ -747,7 +773,7 @@ EOL
 
   # Wait for the services to start and print logs
   echo "Waiting for services to start..."
-  sleep 3  # Adjust the sleep time as needed
+  sleep 1  # Adjust the sleep time as needed
 
   echo "Printing docker compose logs..."
   sudo docker compose logs
@@ -755,6 +781,7 @@ EOL
 
 # Function to convert PEM to PKCS12 and then to JKS
 convert_pem_to_jks() {
+  echo "Converting ZeroSSL certificate to JKS format ($domain.jks) for use with Wowza Streaming Engine..."
     local domain=$1
     local pem_dir=/usr/local/WowzaStreamingEngine/conf/ssl/archive/$domain
     local jks_dir=/usr/local/WowzaStreamingEngine/conf
@@ -851,10 +878,7 @@ sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
 sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
 sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt $swag/etc/letsencrypt/live/$jks_domain/fullchain.crt
 sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key $swag/etc/letsencrypt/live/$jks_domain/privkey.key
-
-
 }
-
 
 ####
 # Function to install Swagger UI
