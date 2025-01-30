@@ -1208,6 +1208,7 @@ echo -e "${w}For instructions on using the installed software, please visit ${ye
 fi
 
 # Prompt user to delete installer script
-if whiptail --title "Cleanup" --yesno "Do you want to delete this installer script?" 8 78; then
+if whiptail --title "Installation complete" --yesno "The installer has completed the installation of Wowza Streaming Engine, SWAG and Portainer.
+Do you want to delete this installer script?" 8 78; then
   rm $SCRIPT_DIR/DockerEngineInstaller.sh
 fi
