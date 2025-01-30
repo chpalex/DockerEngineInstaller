@@ -1139,7 +1139,7 @@ EOL
       <h2>Wowza Streaming Engine</h2>
       <img src="https://www.wowza.com/wp-content/uploads/Wowza-logo-transparent.png" alt="Wowza Logo" class="logo">
       <p>Access the Wowza Streaming Engine Manager at: <a href="http://$public_ip:8088" target="_blank">http://$public_ip:8088</a></p>
-      #<p>Access the Swagger UI for REST API at: <a href="http://$public_ip/swagger/" target="_blank">http://$public_ip/swagger</a></p>
+      <!-- <p>Access the Swagger UI for REST API at: <a href="http://$public_ip/swagger/" target="_blank">http://$public_ip/swagger</a></p> -->
       <p>To manage the Engine files, use the following symlinks in the <strong>$container_dir</strong> directory:</p>
       <ul>
         <li>Engine_lib</li>
@@ -1181,14 +1181,14 @@ EOL
       <p>For more information, visit the <a href="https://www.portainer.io" target="_blank">Portainer website</a>.</p>
     </div>
 
-    #<div class="section">
-    #   <h2>SWAG</h2>
-    #  <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
-    #  <p>Access the SWAG webserver at: <a href="http://$public_ip" target="_blank">http://$public_ip</a></p>
-    #  <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
-    #  <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
-    #  <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag" target="_blank">SWAG github</a>.</p>
-    #</div>
+    <!-- <div class="section">
+       <h2>SWAG</h2>
+      <img src="https://docs.linuxserver.io/assets/icon.svg" alt="SWAG Logo" class="logo">
+      <p>Access the SWAG webserver at: <a href="http://$public_ip" target="_blank">http://$public_ip</a></p>
+      <p>SWAG is a webserver and a free SSL certificate bot that provides SSL certificates for your Wowza Streaming Engine and Manager.</p>
+      <p>To manage the webserver and pages you can access the files in <strong>$container_dir/www</strong></p>
+      <p>For more information, visit the <a href="https://github.com/linuxserver/docker-swag" target="_blank">SWAG github</a>.</p>
+    </div> -->
   </div>
 </body>
 </html>
