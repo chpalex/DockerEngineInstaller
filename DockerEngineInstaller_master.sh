@@ -333,8 +333,7 @@ duckDNS_create() {
 upload_jks() {
   uploaded_jks=false
   while true; do
-    if whiptail --title "SSL Configuration" --yesno "Do you want to upload a .jks file?" 10 60; then
-      whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $upload..." 10 60
+    if whiptail --title "SSL Configuration" --msgbox "Press [Enter] to continue after uploading the .jks file to $upload..." 10 60
 
       # Find all .jks files
       jks_files=($(ls "$upload"/*.jks 2>/dev/null))
@@ -908,8 +907,12 @@ cd $upload
         -deststorepass "$jks_password" \
         -destkeypass "$jks_password" \
         -noprompt
-sudo openssl pkcs12 -pass pass:"$jks_password" -in keystore.p12 -nokeys -out cert.crt
-sudo openssl pkcs12 -pass pass:"$jks_password" -in keystore.p12 -nodes -nocerts -out key.key
+
+# Convert PKCS12 to PEM (certificate only)
+sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.crt -passin pass:$jks_password
+
+# Convert PKCS12 to PEM (private key only)
+sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.key -passin pass:$jks_password
 
 sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
 sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
