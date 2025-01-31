@@ -703,6 +703,25 @@ EOL
 # Function to create docker-compose.yml and run docker compose up
 create_and_run_docker_compose() {
 
+# Locate previous volumes
+# Generate stack name variable for this install
+stack_name=$(echo "$container_name" | tr -d '.') 
+
+# Find volumes matching the pattern
+volumes=$(sudo docker volume ls -q | grep "${stack_name}_engine")
+
+if [ -n "$volumes" ]; then
+    for volume in $volumes; do
+        # Ask the user if they want to remove the volume
+        if whiptail --yes-button "Remove" --no-button "Keep" --yesno "Old volume matching ${stack_name}_engine found: $volume.\nDo you want to remove it to install the new Docker stack?\nKeeping the old volume with retain the previous configuration of the Engine install." 20 60; then
+            sudo docker volume rm "$volume"
+            whiptail --msgbox "Volume $volume was removed." 10 60
+        else
+            whiptail --msgbox "Volume $volume was kept. The previous configuration of Wowza Streaming Engine will be used." 10 60
+        fi
+    done
+fi
+
   # Create docker-compose.yml
   cat <<EOL > "$container_dir/docker-compose.yml"
 services:
@@ -1181,7 +1200,7 @@ EOL
       </ul>
       <p>To nuke the whole thing and start over, use the following commands:</p>
       <ul>
-        <li>sudo docker system prune -a --volumes -f</li>
+        <li>sudo docker system prune</li>
       </ul>
     </div>
 
@@ -1233,13 +1252,12 @@ check_env_prompt_credentials
 create_and_run_docker_compose
 
 # Create symlinks for Engine directories
-engine_volume=$(sudo docker volume ls --format '{{.Name}}' | grep '$container_name_engine')
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/conf/ $container_dir/Engine_conf
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/logs/ $container_dir/Engine_logs
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/content/ $container_dir/Engine_content
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/transcoder/ $container_dir/Engine_transcoder
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/manager/ $container_dir/Engine_manager
-sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/lib /$container_dir/Engine_lib
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/conf/ $container_dir/Engine_conf
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/logs/ $container_dir/Engine_logs
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/content/ $container_dir/Engine_content
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/transcoder/ $container_dir/Engine_transcoder
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/manager/ $container_dir/Engine_manager
+sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/lib /$container_dir/Engine_lib
 
 if $duckdns; then
   convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
