@@ -54,6 +54,7 @@ install_docker() {
   echo -e "${w}Docker found"
   fi
 }
+
 ####
 # Function to install jq
 install_jq() {
@@ -71,7 +72,6 @@ install_unzip() {
   sudo apt install -y unzip > /dev/null 2>&1
   fi
 }
-
 
 ####
 # Function to fetch and set Wowza streaming engine Docker versions
@@ -708,7 +708,7 @@ create_and_run_docker_compose() {
 services:
   swag:
     image: lscr.io/linuxserver/swag:latest
-    container_name: swag
+    container_name: ${container_name}_swag
     cap_add:
       - NET_ADMIN
     env_file: 
@@ -774,7 +774,7 @@ EOL
       swag:
         condition: service_started
     image: portainer/portainer-ce:latest
-    container_name: portainer
+    container_name: ${container_name}_portainer
     ports:
       - 9443:9443
       - 8000:9000
@@ -1039,12 +1039,14 @@ create_html_instructions() {
         <li>Copy files out: <code>sudo cp Engine_xxxx/[file_name] [file_name]</code></li>
         <li>Copy files in: <code>sudo cp [file_name] Engine_xxxx/[file_name]</code></li>
       </ul>
-      <p>NOTE: Container must be restarted for changes to take effect:</p>
+      <p>NOTE: Container must be restarted for changes to take effect: <code>cd $container_dir && sudo docker restart $container_name && cd $SCRIPT_DIR</code></p>
+      <p>To restart other containders, use ${container_name}_swag or ${container_name}_portainer in the same command</p>
       <p>To manage the state of the docker containers, use the following commands:</p>
       <ul>
-        <li>Stop and destroy the Docker Wowza container: <code>cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR</code></li>
-        <li>Stop the container without destroying it: <code>cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR</code></li>
-        <li>Start the container after stopping it: <code>cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR</code></li>
+        <li>Stop and destroy the Docker Wowza, swag and portainer container stack: <code>cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR</code></li>
+        <li>Stop the container stack without destroying it: <code>cd $container_dir && sudo docker compose stop && cd $SCRIPT_DIR</code></li>
+        <li>Start the container stack after stopping it: <code>cd $container_dir && sudo docker compose start && cd $SCRIPT_DIR</code></li>
+        <li>Restart the container stack: <code>cd $container_dir && sudo docker compose restart && cd $SCRIPT_DIR</code></li>
       </ul>
       <p>To delete volumes, use the following command:</p>
       <ul>
@@ -1156,7 +1158,7 @@ EOL
         <li>Copy files in: <code>sudo cp [file_name] Engine_xxxx/[file_name]</code></li>
       </ul>
       <p>NOTE: Container must be restarted for changes to take effect: <code>cd $container_dir && sudo docker restart $container_name && cd $SCRIPT_DIR</code></p>
-      <p>To restart other containders, use swag or portainer in the same command</p>
+      <p>To restart other containders, use ${container_name}_swag or ${container_name}_portainer in the same command</p>
       <p>To manage the state of the docker containers, use the following commands:</p>
       <ul>
         <li>Stop and destroy the Docker Wowza, swag and portainer container stack: <code>cd $container_dir && sudo docker compose down --rmi 'all' && cd $SCRIPT_DIR</code></li>
