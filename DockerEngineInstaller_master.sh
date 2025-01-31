@@ -927,19 +927,19 @@ cd $upload
         -noprompt
 
 # Convert PKCS12 to PEM (certificate only)
-sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.crt -passin pass:$jks_password
+sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.pem -passin pass:$jks_password
 
 # Convert PKCS12 to PEM (private key only)
-sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.key -passin pass:$jks_password
+sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem -passin pass:$jks_password
 
 # Ensure the SWAG directories exist
 sudo mkdir -p "$swag/etc/letsencrypt/archive/$jks_domain"
 sudo mkdir -p "$swag/etc/letsencrypt/live/$jks_domain"
 
-sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
-sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt $swag/etc/letsencrypt/live/$jks_domain/fullchain.crt
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key $swag/etc/letsencrypt/live/$jks_domain/privkey.key
+sudo cp cert.pem $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem
+sudo cp key.pem $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem $swag/etc/letsencrypt/live/$jks_domain/fullchain.pem
+sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem $swag/etc/letsencrypt/live/$jks_domain/privkey.pem
 }
 
 ####
