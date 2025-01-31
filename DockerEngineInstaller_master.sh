@@ -16,7 +16,7 @@ root=,black'
 
 # Display info box about the script and function scripts
 whiptail --title "Docker Engine Workflow Installer" --msgbox "
-Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of Wowza Streaming Engine, a simple webserver and SSL in a Docker environment." 20 75
+Welcome to the Docker Engine Workflow Installer!\n\nThis installation script automates the deployment of\n\n - Wowza Streaming Enginen\n\n - SWAG (simple webserver and SSL bot)\n\n - Portainer (docker management tool) in a Docker stack." 20 75
 
 #
 ## Set directory variables and create the directories
