@@ -913,6 +913,10 @@ sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.crt -passin pass:$jks_pas
 # Convert PKCS12 to PEM (private key only)
 sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.key -passin pass:$jks_password
 
+# Ensure the SWAG directories exist
+sudo mkdir -p "$swag/etc/letsencrypt/archive/$jks_domain"
+sudo mkdir -p "$swag/etc/letsencrypt/live/$jks_domain"
+
 sudo cp cert.crt $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt
 sudo cp key.key $swag/etc/letsencrypt/archive/$jks_domain/privkey1.key
 sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.crt $swag/etc/letsencrypt/live/$jks_domain/fullchain.crt
