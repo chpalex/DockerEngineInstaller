@@ -709,6 +709,13 @@ stack_name=$(echo "$container_name" | tr -d '.')
 
 # Find volumes matching the pattern
 volumes=$(sudo docker volume ls -q | grep "${stack_name}_engine")
+volumesP=$(sudo docker volume ls -q  | grep "${stack_name}_portainer_data")
+
+if [ -n "$volumesP" ]; then
+    for volume in $volumesP; do
+    sudo docker volume rm "$volume"
+    done
+fi
 
 if [ -n "$volumes" ]; then
     for volume in $volumes; do
@@ -752,11 +759,11 @@ EOL
       - EXTRA_DOMAINS= #optional
       - STAGING=false #optional
       - DISABLE_F2B= #optional
-      - SWAG_AUTORELOAD=true
 EOL
   fi
 
   cat <<EOL >> "$container_dir/docker-compose.yml"
+      - SWAG_AUTORELOAD=true
     volumes:
       - ${swag}:/config
       - ./www:/config/www
