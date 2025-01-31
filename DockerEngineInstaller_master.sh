@@ -296,7 +296,7 @@ duckDNS_create() {
       # Create and copy duckdns.ini with secure permissions
         if printf "dns_duckdns_token=%s\n" "$duckdns_token" > "$upload/duckdns.ini"; then
             if cp "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini"; then
-                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && duckdns=true && ssl_config "$jks_file" || {
+                sudo chmod 644 "$DNS_CONF_DIR/duckdns.ini" "$upload/duckdns.ini" && chosen_jks_file=false && uploaded_jks=false && duckdns=true && ssl_config "$jks_file" || {
                     whiptail --title "Error" --msgbox "Failed to set permissions for DuckDNS configuration" 8 $DIALOG_WIDTH
                     rm -f "$upload/duckdns.ini" "$DNS_CONF_DIR/duckdns.ini" "$upload/${jks_duckdns_domain}.jks"
                       use_ssl=false
@@ -387,6 +387,8 @@ upload_jks() {
             return 1
           fi
         fi
+        chosen_jks_file=false
+        duckdns=false
         uploaded_jks=true
         ssl_config "$jks_file"
         return 0
@@ -913,7 +915,7 @@ convert_pem_to_jks() {
 # Function to convert uploaded jks file to pem
 convert_jks_to_pem() {
 
-echo "Converting $jks_file to CRT format for use with SWAG and Portainer..."
+echo "Converting $jks_file to PEM format for use with Webserver and Portainer..."
 
 # Check if keytool is installed and install it
     if ! command -v keytool &> /dev/null; then
@@ -934,19 +936,10 @@ cd $upload
         -noprompt
 
 # Convert PKCS12 to PEM (certificate only)
-sudo openssl pkcs12 -in keystore.p12 -nokeys -out cert.pem -passin pass:$jks_password
+sudo openssl pkcs12 -in keystore.p12 -nokeys -out ${domain}.pem -passin pass:$jks_password
 
 # Convert PKCS12 to PEM (private key only)
-sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out key.pem -passin pass:$jks_password
-
-# Ensure the SWAG directories exist
-sudo mkdir -p "$swag/etc/letsencrypt/archive/$jks_domain"
-sudo mkdir -p "$swag/etc/letsencrypt/live/$jks_domain"
-
-sudo cp cert.pem $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem
-sudo cp key.pem $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/fullchain1.pem $swag/etc/letsencrypt/live/$jks_domain/fullchain.pem
-sudo ln -s $swag/etc/letsencrypt/archive/$jks_domain/privkey1.pem $swag/etc/letsencrypt/live/$jks_domain/privkey.pem
+sudo openssl pkcs12 -in keystore.p12 -nodes -nocerts -out ${domain}.pem -passin pass:$jks_password
 }
 
 ####
@@ -1269,7 +1262,7 @@ sudo ln -sf /var/lib/docker/volumes/${stack_name}_engine/_data/lib /$container_d
 if $duckdns; then
   convert_pem_to_jks "$jks_domain" "$jks_password" "$jks_password"
 fi
-if $uploaded_jks || $chosen_jks_file; then
+if ! $duckdns; then
   convert_jks_to_pem
 fi
 
