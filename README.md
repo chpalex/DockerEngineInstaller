@@ -6,7 +6,7 @@ The script does the following:
 - check for docker and jq, install if not installed
 - retrieve a list of available WSE docker images and present them to the user to select
 - asks if the user wants to use SSL if no, then skip all ssl prompts and config
-- Check for JKS and CHOSE JKS
+- Check for JKS and choose JKS
 - check if any jks are available and offers the user to use one
 - capture jks password for future use
 - capture jks domain for future use
