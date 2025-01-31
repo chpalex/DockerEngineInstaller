@@ -1229,7 +1229,7 @@ check_env_prompt_credentials
 create_and_run_docker_compose
 
 # Create symlinks for Engine directories
-engine_volume=$(sudo docker volume ls --format '{{.Name}}' | grep '_engine')
+engine_volume=$(sudo docker volume ls --format '{{.Name}}' | grep '$container_name_engine')
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/conf/ $container_dir/Engine_conf
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/logs/ $container_dir/Engine_logs
 sudo ln -sf /var/lib/docker/volumes/$engine_volume/_data/content/ $container_dir/Engine_content
